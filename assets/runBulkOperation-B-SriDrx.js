@@ -1,0 +1,1 @@
+async function e(e,t){let n=await Promise.allSettled(e.map(e=>Promise.resolve().then(()=>t(e)))),r=[],i=[];return n.forEach((t,n)=>{let a=e[n];t.status===`fulfilled`?r.push(a):i.push({entry:a,reason:t.reason})}),{succeeded:r,failed:i,sucessos:r.length,falhas:i.length}}export{e as t};

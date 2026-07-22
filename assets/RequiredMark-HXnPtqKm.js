@@ -1,0 +1,1 @@
+import{a as e,m as t}from"./Button-DGdyuAWF.js";var n={mark:`_mark_2f9rr_9`,srOnly:`_srOnly_2f9rr_1`},r=t({RequiredMark:()=>a}),i=e();function a(){return(0,i.jsxs)(i.Fragment,{children:[(0,i.jsx)(`em`,{className:n.mark,"aria-hidden":`true`,children:`*`}),(0,i.jsx)(`span`,{className:n.srOnly,children:` (obrigatório)`})]})}export{r as n,a as t};

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-escore.schema.json",
+  "title": "Corpo do molde T3 escore-por-pontos (corpo.escore)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'escore-por-pontos'. Mesmo motor do Admin de Escores ja entregue [REAL]. Cada question tem opcoes com pontos; total = soma das pontuacoes das respostas; seleciona o resultado por limiar `biggerThen`. TYPOS LOAD-BEARING [REAL], NAO corrigir: `aditionalTexts`, `biggerThen` (sao contrato persistido; CONTEXT.md). Fonte: 03-backend-json.md §2.3, appwide-03.",
+  "x-status": "[REAL — Admin de Escores entregue]",
+  "x-comparador-limiar": "A SELECAO por limiar (> vs >=) NAO esta isolada no bundle (C-02/qa round1 INCONCLUSIVO). Intencao do admin React = >= (maior limiar <= total, inclusivo). Proposta a RATIFICAR com Gustavo + teste de borda total==biggerThen (muda SOFA). Nao modelar JSON de escore no limiar antes da decisao.",
+  "type": "object",
+  "required": ["questions", "resultados"],
+  "properties": {
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "options"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["label", "pontos"],
+              "properties": {
+                "label": { "type": "string" },
+                "pontos": { "type": "integer" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "resultados": {
+      "type": "array",
+      "description": "Faixas de resultado. Resolucao: o resultado com maior `biggerThen` <= total (ver x-comparador-limiar).",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "biggerThen"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "meaning": { "type": "string" },
+          "biggerThen": { "type": "integer", "description": "Limiar (typo load-bearing, NAO corrigir para 'biggerThan')." }
+        }
+      }
+    },
+    "aditionalTexts": {
+      "type": "array",
+      "description": "Textos adicionais por significado (typo load-bearing 'aditionalTexts', NAO corrigir).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "meaningTitle": { "type": "string" },
+          "variations": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

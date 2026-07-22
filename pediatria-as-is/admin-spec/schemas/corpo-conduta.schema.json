@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-conduta.schema.json",
+  "title": "Corpo do molde T6 conduta-arvore-decisao (corpo.arvore)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'conduta-arvore-decisao'. Nos SIM/NAO encadeados que revelam conduta condicional. Estado booleano por no; navega sim/nao ate um no terminal (conduta_texto preenchido, sim/nao nulos). Ex.: Hipoglicemia (consciente? -> resolveu?), Bradicardia (sinais? mnemonico MOVE), Cardioversao (tem pulso? -> QRS? -> ritmo?), aba 3 CAD. Validate (camada 2): todo caminho termina em folha; sem ciclo; sem id orfao. Fonte: 03-backend-json.md §2.6, 01-sistema-de-tipos §2 T6.",
+  "x-status": "[PROPOSTA — hoje hardcode no binario]",
+  "type": "object",
+  "required": ["no_raiz", "nos"],
+  "properties": {
+    "no_raiz": { "type": "string", "description": "id do no inicial." },
+    "nos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "pergunta": { "type": "string" },
+          "sim": { "type": ["string", "null"], "description": "id do proximo no quando SIM. null em folha." },
+          "nao": { "type": ["string", "null"], "description": "id do proximo no quando NAO. null em folha." },
+          "conduta_texto": { "type": ["string", "null"], "description": "No terminal: conduta. sim/nao null + este preenchido = folha." }
+        }
+      }
+    },
+    "mnemonico_header": { "type": ["string", "null"], "description": "ex.: MOVE (opcional)." },
+    "link_final": { "type": ["string", "null"], "description": "Termina apontando para outra ferramenta (id)." }
+  }
+}

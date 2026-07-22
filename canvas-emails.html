@@ -1,0 +1,1354 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CalcMed Frente C — Email Design Playground V4.0 (Supreme Engine)</title>
+  <!-- Google Fonts para Interface Premium e E-mails -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Load the Monaco Editor CSS -->
+  <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/editor/editor.main.min.css">
+  
+  <style>
+    /* -------------------------------------------------------------
+       DASHBOARD V4.0 ULTRA PREMIUM (ESTILO LINEAR / RAYCAST / RESEND)
+       ------------------------------------------------------------- */
+    :root {
+      --bg-slate-950: #02040a;
+      --bg-slate-900: #090d16;
+      --bg-slate-800: #161b22;
+      --border-slate-800: #21262d;
+      --border-slate-700: #30363d;
+      --text-white: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary-teal: #00B4D8;
+      --primary-teal-dark: #0077B6;
+      --semantic-red: #f85149;
+      --semantic-green: #3fb950;
+      --semantic-orange: #f0883e;
+      --shadow-premium: 0 30px 60px -15px rgba(0,0,0,0.8);
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-slate-950);
+      color: var(--text-white);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* GRID BACKGROUND PARA O WORKSPACE TRIDIMENSIONAL DE DESIGN */
+    .grid-bg {
+      background-image: linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 20px 20px;
+      background-position: center;
+    }
+
+    /* TOP BAR GLASSMORPHISM */
+    header {
+      background: rgba(9, 13, 22, 0.85);
+      backdrop-filter: blur(28px);
+      border-bottom: 1px solid var(--border-slate-800);
+      padding: 10px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .brand h1 span {
+      color: var(--primary-teal);
+    }
+
+    .brand-badge {
+      background: rgba(0, 180, 216, 0.1);
+      border: 1px solid rgba(0, 180, 216, 0.3);
+      color: var(--primary-teal);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 9999px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      background: rgba(9, 13, 22, 0.9);
+      border: 1px solid var(--border-slate-800);
+      padding: 3px;
+      border-radius: 8px;
+      gap: 2px;
+    }
+
+    .toolbar-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toolbar-btn.active, .toolbar-btn:hover {
+      background: var(--bg-slate-800);
+      color: var(--text-white);
+    }
+
+    .toolbar-btn.active {
+      color: var(--primary-teal);
+      box-shadow: 0 2px 8px rgba(0, 180, 216, 0.15);
+    }
+
+    /* CONTENEDOR PRINCIPAL: SIDEBAR + WORKSPACE + LIVE EDITOR */
+    .app-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* SIDEBAR ESQUERDA (NAVEGADOR DE COMPONENTES / ARQUÉTIPOS) */
+    aside.sidebar {
+      width: 280px;
+      background: #070b12;
+      border-right: 1px solid var(--border-slate-800);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-slate-800);
+    }
+
+    .sidebar-section h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    .menu-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .menu-link {
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-link:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-white);
+    }
+
+    .menu-link.active {
+      background: rgba(0, 180, 216, 0.08);
+      color: var(--primary-teal);
+      border-left: 3px solid var(--primary-teal);
+      border-radius: 0 6px 6px 0;
+      padding-left: 9px;
+    }
+
+    /* SIMULADOR DE VARIÁVEIS NA SIDEBAR */
+    .variable-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .variable-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .variable-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .variable-field input {
+      background: #02040a;
+      border: 1px solid var(--border-slate-800);
+      border-radius: 6px;
+      padding: 8px;
+      color: var(--text-white);
+      font-size: 13px;
+      transition: border 0.2s;
+    }
+
+    .variable-field input:focus {
+      outline: none;
+      border-color: var(--primary-teal);
+    }
+
+    /* ESPAÇO DE TRABALHO CENTRAL (WORKSPACE) */
+    .workspace-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .workspace-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow-y: auto;
+      padding: 60px 40px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* RÉGUA DE VIEWPORT NA PARTE SUPERIOR DO CANVAS */
+    .ruler-x {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 24px;
+      background: #070b12;
+      border-bottom: 1px solid var(--border-slate-800);
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--text-muted);
+      justify-content: space-between;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* MOLDURAS PREMIUM DE DISPOSITIVO (IPHONE / IPAD / DESKTOP) */
+    .preview-frame {
+      background: #ffffff;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      height: fit-content;
+      margin: 0 auto;
+      position: relative;
+      box-shadow: var(--shadow-premium);
+    }
+
+    /* Moldura iPhone Pro */
+    .frame-iphone-pro {
+      max-width: 375px;
+      border: 14px solid #161b22;
+      border-radius: 40px;
+      box-shadow: var(--shadow-premium), 0 0 0 1px #30363d;
+      overflow: hidden;
+    }
+
+    /* Ilha Dinâmica */
+    .frame-iphone-pro::before {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 25px;
+      background: #000000;
+      border-radius: 15px;
+      z-index: 99;
+    }
+
+    /* Moldura iPad */
+    .frame-ipad {
+      max-width: 600px;
+      border: 16px solid #161b22;
+      border-radius: 28px;
+      box-shadow: var(--shadow-premium), 0 0 0 1px #30363d;
+      overflow: hidden;
+    }
+
+    /* Moldura Desktop */
+    .frame-desktop-border {
+      max-width: 720px;
+      border: 1px solid var(--border-slate-800);
+      border-radius: 8px;
+      box-shadow: var(--shadow-premium);
+    }
+
+    /* VISUALIZAÇÃO LADO A LADO (SPLIT VIEW LIGHT/DARK) */
+    .split-view-container {
+      display: flex;
+      gap: 40px;
+      width: 100%;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .split-device-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .split-device-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* TEMA ESCURO DOS EMAILS NO PREVIEW */
+    .theme-dark-email {
+      background-color: #0f172a !important;
+    }
+    .theme-dark-email .email-bg {
+      background-color: #0f172a !important;
+    }
+    .theme-dark-email .email-card {
+      background-color: #1e293b !important;
+      border-color: #334155 !important;
+    }
+    .theme-dark-email .email-card-grey {
+      background-color: #0f172a !important;
+      border-color: #334155 !important;
+    }
+    .theme-dark-email .email-card-elevado {
+      background-color: #0f172a !important;
+      border-color: #334155 !important;
+    }
+    .theme-dark-email .email-text-title {
+      color: #f8fafc !important;
+    }
+    .theme-dark-email .email-text-body {
+      color: #cbd5e1 !important;
+    }
+    .theme-dark-email .email-divider {
+      background-color: #334155 !important;
+    }
+    .theme-dark-email .acordeao-label {
+      background-color: #0f172a !important;
+      color: #f8fafc !important;
+    }
+    .theme-dark-email .acordeao-content {
+      background-color: #1e293b !important;
+      border-color: #334155 !important;
+      color: #cbd5e1 !important;
+    }
+    .theme-dark-email .quiz-opcao-label {
+      background-color: #0f172a !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    .theme-dark-email .aba-tab-btn {
+      background-color: #0f172a !important;
+      border-color: #334155 !important;
+      color: #94a3b8 !important;
+    }
+
+    /* MODO SIMULAÇÃO DE INBOX (QA SIMULATOR) */
+    .sim-outlook .preview-frame * {
+      border-radius: 0 !important; /* Outlook ignora border-radius */
+    }
+    .sim-outlook::after {
+      content: 'SIMULAÇÃO: Outlook Desktop Word Engine (Sem border-radius, fontes web bloqueadas)';
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--semantic-orange);
+      color: #000;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 4px;
+      z-index: 1000;
+    }
+
+    /* MODO INSPECT (FIGMA STYLE) ACTIVE */
+    .inspect-active .workspace-area *[class*="email-"] {
+      cursor: crosshair !important;
+      position: relative;
+    }
+    .inspect-active .workspace-area *[class*="email-"]:hover {
+      outline: 2px solid var(--primary-teal) !important;
+    }
+    
+    /* Popover do Inspect */
+    .inspect-popover {
+      position: absolute;
+      background: var(--bg-slate-900);
+      border: 1px solid var(--border-slate-700);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: var(--shadow-premium);
+      font-size: 11px;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+      color: var(--text-white);
+      max-width: 250px;
+    }
+    .inspect-popover h5 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      color: var(--primary-teal);
+      margin-bottom: 6px;
+    }
+    .inspect-popover ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* PAINEL LATERAL DIREITO: LIVE MONACO EDITOR */
+    aside.live-editor {
+      width: 480px;
+      background: #060911;
+      border-left: 1px solid var(--border-slate-800);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .editor-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-slate-800);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 13, 22, 0.5);
+    }
+
+    .editor-header h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .editor-btn {
+      background: var(--primary-teal);
+      border: none;
+      color: #020617;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .editor-btn:hover {
+      background: var(--primary-teal-dark);
+    }
+
+    .editor-btn-secondary {
+      background: transparent;
+      border: 1px solid var(--border-slate-800);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .editor-btn-secondary:hover {
+      border-color: var(--border-slate-700);
+      color: var(--text-white);
+    }
+
+    .editor-body-wrapper {
+      flex: 1;
+      position: relative;
+      background: #02040a;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #monaco-editor-container {
+      flex: 1;
+      width: 100%;
+    }
+
+    /* ABA DE PROMPTS DE IA */
+    .ia-prompts-container {
+      padding: 16px;
+      background: var(--bg-slate-900);
+      border-top: 1px solid var(--border-slate-800);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .ia-prompts-container h5 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      color: var(--primary-teal);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .ia-prompt-box {
+      background: var(--bg-slate-950);
+      border: 1px solid var(--border-slate-800);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 12px;
+      color: var(--text-white);
+      position: relative;
+      cursor: pointer;
+      transition: border 0.2s;
+    }
+    .ia-prompt-box:hover {
+      border-color: var(--border-slate-700);
+    }
+    .ia-prompt-box span {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      font-size: 10px;
+      color: var(--primary-teal);
+      font-weight: 600;
+    }
+
+    /* CONTAINER DO GUIA DE HANDOFF INTEGRADO */
+    .handoff-doc-panel {
+      padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      font-family: 'Inter', sans-serif;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .handoff-doc-panel h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: var(--primary-teal);
+      border-bottom: 1px solid var(--border-slate-800);
+      padding-bottom: 8px;
+    }
+
+    .handoff-doc-panel h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      color: #f8fafc;
+    }
+
+    .handoff-doc-panel p {
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .handoff-doc-panel ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    .handoff-doc-panel code {
+      font-family: var(--font-mono);
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #34d399;
+      font-size: 12px;
+    }
+
+    .handoff-doc-panel pre {
+      background: #020617;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-slate-800);
+      overflow-x: auto;
+      margin-bottom: 16px;
+    }
+
+    .handoff-doc-panel pre code {
+      background: transparent;
+      padding: 0;
+      color: #34d399;
+    }
+
+  </style>
+</head>
+<body class="grid-bg">
+
+  <!-- BARRA SUPERIOR GLASSMORPHISM -->
+  <header>
+    <div class="brand">
+      <h1>CalcMed <span>Email Canvas</span></h1>
+      <span class="brand-badge">V4.0 (Supreme)</span>
+    </div>
+
+    <!-- Seletor Principal: Componentes vs Templates vs Handoff Doc -->
+    <div class="toolbar-group">
+      <button class="toolbar-btn active" id="tab-btn-components" onclick="changeMainTab('components')">
+        🧩 Componentes
+      </button>
+      <button class="toolbar-btn" id="tab-btn-templates" onclick="changeMainTab('templates')">
+        ✉️ 6 Arquétipos
+      </button>
+      <button class="toolbar-btn" id="tab-btn-handoff" onclick="changeMainTab('handoff')">
+        📖 Guia Handoff
+      </button>
+    </div>
+
+    <!-- Seletor de Modo de Visualização e Simulação (Inspect & Simulator) -->
+    <div class="controls" id="device-controls-group" style="display: flex; gap: 8px;">
+      
+      <!-- Simulador de Inbox -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn active" id="sim-btn-default" onclick="changeSimulator('default')">🌐 Padrão</button>
+        <button class="toolbar-btn" id="sim-btn-outlook" onclick="changeSimulator('outlook')">📧 Outlook Sim</button>
+      </div>
+
+      <!-- Figma Style Inspect -->
+      <div class="toolbar-group">
+        <button class="toolbar-btn" id="inspect-toggle-btn" onclick="toggleInspectMode()">
+          🔍 Inspect Mode: Off
+        </button>
+      </div>
+
+      <div class="toolbar-group">
+        <button class="toolbar-btn active" id="device-btn-desktop" onclick="changeDevice('desktop')">💻 Desktop</button>
+        <button class="toolbar-btn" id="device-btn-tablet" onclick="changeDevice('tablet')">平板 Tab</button>
+        <button class="toolbar-btn" id="device-btn-mobile" onclick="changeDevice('mobile')">📱 Mob</button>
+        <button class="toolbar-btn" id="device-btn-split" onclick="changeDevice('split')">🌓 Split</button>
+      </div>
+
+      <div class="toolbar-group" id="theme-toggles-container">
+        <button class="toolbar-btn active" id="theme-btn-light" onclick="changeTheme('light')">☀️ Light</button>
+        <button class="toolbar-btn" id="theme-btn-dark" onclick="changeTheme('dark')">🌙 Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="app-main">
+
+    <!-- SIDEBAR ESQUERDA: NAVEGADOR & DYNAMIC VARIABLES & BUILDS -->
+    <aside class="sidebar" id="app-sidebar-left">
+      
+      <!-- Seção do Menu de Componentes -->
+      <div class="sidebar-section" id="menu-components">
+        <h3>Componentes</h3>
+        <ul class="menu-list">
+          <li class="menu-link active" onclick="selectItem('c-header', 'comp-header-id')">Header de Marca</li>
+          <li class="menu-link" onclick="selectItem('c-accent', 'comp-accent-id')">Faixas de Acento</li>
+          <li class="menu-link" onclick="selectItem('c-hero', 'comp-hero-id')">Títulos Hero</li>
+          <li class="menu-link" onclick="selectItem('c-body', 'comp-body-id')">Corpo Escaneável</li>
+          <li class="menu-link" onclick="selectItem('c-cards', 'comp-cards-id')">Cards de Destaque</li>
+          <li class="menu-link" onclick="selectItem('c-cta', 'comp-cta-id')">Botões Bulletproof</li>
+          <li class="menu-link" onclick="selectItem('c-nps', 'comp-nps-id')">Widget NPS (0-10)</li>
+          <li class="menu-link" onclick="selectItem('c-quiz', 'comp-quiz-id')">Quiz Clínico CSS</li>
+          <li class="menu-link" onclick="selectItem('c-tabs', 'comp-tabs-id')">Abas Clínicas CSS</li>
+          <li class="menu-link" onclick="selectItem('c-footer', 'comp-footer-id')">Footer Legal</li>
+        </ul>
+      </div>
+
+      <!-- Seção do Menu de Arquétipos -->
+      <div class="sidebar-section" id="menu-templates" style="display: none;">
+        <h3>6 Arquétipos</h3>
+        <ul class="menu-list">
+          <li class="menu-link active" onclick="selectItem('t-educ', 'temp-educ-id')">1. Educacional</li>
+          <li class="menu-link" onclick="selectItem('t-case', 'temp-case-id')">2. Caso de Uso</li>
+          <li class="menu-link" onclick="selectItem('t-conv', 'temp-conv-id')">3. Conversão / Decisão</li>
+          <li class="menu-link" onclick="selectItem('t-alert', 'temp-alert-id')">4. Alerta / Urgência</li>
+          <li class="menu-link" onclick="selectItem('t-transp', 'temp-transp-id')">5. Transparência / Carta</li>
+          <li class="menu-link" onclick="selectItem('t-nps', 'temp-nps-id')">6. Feedback / NPS</li>
+        </ul>
+      </div>
+
+      <!-- Seção de Variáveis Dinâmicas -->
+      <div class="sidebar-section" id="vars-section">
+        <h3>Variáveis Dinâmicas</h3>
+        <div class="variable-input-group">
+          <div class="variable-field">
+            <label for="var-name">Nome do Médico ({{nome}})</label>
+            <input type="text" id="var-name" value="Luis" oninput="updateVariables()">
+          </div>
+          <div class="variable-field">
+            <label for="var-dose">Valor Clínico ({{dose}})</label>
+            <input type="text" id="var-dose" value="21.6 mL/h" oninput="updateVariables()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção de Builds Estáticos de Produção (Next Level) -->
+      <div class="sidebar-section" id="static-builds-section">
+        <h3>Build de Produção (HTML)</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <a href="/emails/welcome.html" target="_blank" style="color: var(--primary-teal); font-size: 13px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            📄 welcome.html &rarr;
+          </a>
+          <a href="/emails/dobutamina.html" target="_blank" style="color: var(--primary-teal); font-size: 13px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            📄 dobutamina.html &rarr;
+          </a>
+          <a href="/emails/feedback-nps.html" target="_blank" style="color: var(--primary-teal); font-size: 13px; text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+            📄 feedback-nps.html &rarr;
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- WORKSPACE DO PREVIEW DE EMAIL COM RÉGUA -->
+    <div class="workspace-wrapper">
+      <div class="ruler-x" id="workspace-ruler">
+        <span>0px</span><span>100px</span><span>200px</span><span>300px</span><span>375px (Mobile)</span><span>500px</span><span>600px (Tablet)</span><span>700px (Desktop)</span><span>Max</span>
+      </div>
+
+      <!-- Área de Visualização Principal -->
+      <div class="workspace-area" id="canvas-scroll-container">
+        
+        <!-- VISUALIZAÇÃO PADRÃO (DISPOSITIVO ÚNICO) -->
+        <div class="preview-frame frame-desktop-border" id="device-preview-frame">
+          <div id="render-content-box" style="padding: 24px;"></div>
+        </div>
+
+        <!-- VISUALIZAÇÃO LADO A LADO (SPLIT VIEW LIGHT/DARK) -->
+        <div class="split-view-container" id="device-split-container" style="display: none;">
+          <!-- Coluna Light Mode -->
+          <div class="split-device-column">
+            <span class="split-device-label">☀️ Light Mode</span>
+            <div class="preview-frame frame-iphone-pro" id="split-frame-light">
+              <div id="split-render-light" style="padding: 20px;"></div>
+            </div>
+          </div>
+          <!-- Coluna Dark Mode -->
+          <div class="split-device-column">
+            <span class="split-device-label">🌙 Dark Mode</span>
+            <div class="preview-frame frame-iphone-pro theme-dark-email" id="split-frame-dark">
+              <div id="split-render-dark" style="padding: 20px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VISUALIZAÇÃO DO GUIA DE HANDOFF INTEGRADO -->
+        <div id="handoff-doc-view" style="display: none; width: 100%;">
+          <div class="handoff-doc-panel">
+            <h2>Guia de Handoff Técnico para E-mails</h2>
+            <p>Consolidação de boas práticas de compatibilidade (Outlook/Gmail) e integração no construtor do GoHighLevel (GHL).</p>
+            
+            <h3>1. Botão CTA Primário "Bulletproof" (Outlook-Safe)</h3>
+            <p>O Outlook Desktop ignora paddings normais aplicados em links. Use esta tabela com tags VML no construtor de HTML:</p>
+            <pre><code>&lt;table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;"&gt;
+  &lt;tr&gt;
+    &lt;td align="center" bgcolor="#00B4D8" style="border-radius: 8px; padding: 14px 24px;"&gt;
+      &lt;!--[if mso]&gt;
+      &lt;v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:vml" href="https://calcmed.design" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="12%" stroke="f" fillcolor="#00B4D8"&gt;
+        &lt;w:anchorlock/&gt;
+        &lt;center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;"&gt;Acessar no Plantão&lt;/center&gt;
+      &lt;/v:roundrect&gt;
+      &lt;![endif]--&gt;
+      &lt;a href="https://calcmed.design" style="font-size: 16px; font-family: 'Inter', Arial, sans-serif; font-weight: 600; color: #FFFFFF; text-decoration: none; display: inline-block; -webkit-text-size-adjust:none; mso-hide:all;"&gt;
+        Acessar no Plantão &lt;span style="font-family: Arial, sans-serif; font-weight: bold; margin-left: 8px;"&gt;&amp;rsaquo;&lt;/span&gt;
+      &lt;/a&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+
+            <h3>2. Abas Clínicas Interativas (CSS Checkbox Hack)</h3>
+            <p>Clientes de e-mail modernos (Apple Mail, iOS) suportam alternância de abas sem carregar scripts. O fallback para clientes antigos exibe as duas abas abertas sequencialmente.</p>
+            <pre><code>&lt;!-- Radio Triggers --&gt;
+&lt;input type="radio" id="tab-adulto" name="clinico-tabs" checked style="display:none !important;"&gt;
+&lt;input type="radio" id="tab-pediatria" name="clinico-tabs" style="display:none !important;"&gt;
+
+&lt;!-- Tab labels --&gt;
+&lt;label for="tab-adulto" class="aba-tab-btn" id="label-adulto" style="display:inline-block; padding:8px 16px;"&gt;Adulto&lt;/label&gt;
+&lt;label for="tab-pediatria" class="aba-tab-btn" id="label-pediatria" style="display:inline-block; padding:8px 16px;"&gt;Pediátrico&lt;/label&gt;</code></pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- POPOVER FLUTUANTE DO FIGMA-STYLE INSPECT -->
+    <div class="inspect-popover" id="element-inspect-popover">
+      <h5 id="inspect-el-name">Componente</h5>
+      <ul id="inspect-el-details">
+        <li>Largura: 600px</li>
+        <li>Bordas: 8px</li>
+      </ul>
+    </div>
+
+    <!-- PAINEL LATERAL DIREITO: LIVE MONACO EDITOR & IA ASSISTANT -->
+    <aside class="live-editor" id="app-editor-right">
+      <div class="editor-header">
+        <h4>Monaco Editor</h4>
+        <div class="editor-actions">
+          <button class="editor-btn-secondary" onclick="resetLiveCode()">Reset</button>
+          <button class="editor-btn-secondary" onclick="formatCode()">Format</button>
+          <button class="editor-btn" onclick="copyLiveCode()">Copiar</button>
+        </div>
+      </div>
+      <div class="editor-body-wrapper">
+        <div id="monaco-editor-container"></div>
+        
+        <!-- Painel de Prompts de Imagem de IA (Next Level Concept) -->
+        <div class="ia-prompts-container">
+          <h5>Assistente de Assets de IA (Midjourney/DALL-E)</h5>
+          <div class="ia-prompt-box" onclick="copyIAPrompt()" id="ia-prompt-text-box">
+            Clique em qualquer componente para carregar o prompt recomendado...
+            <span>Copiar Prompt</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Load the Monaco Loader -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+
+  <!-- BIBLIOTECA DE CÓDIGOS DE ALTA FIDELIDADE (HTML/CSS INLINE DE EMAIL) -->
+  <script>
+    const emailComponents = {
+      'c-header': `<!-- Header de Marca com Logo de verdade da CalcMed -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td align="center" style="padding: 32px 0; border-bottom: 1px solid #F1F5F9;" class="email-card-grey">
+      <!-- Logo Oficial Real (Tamanho Otimizado de 200px) -->
+      <img src="https://calcmed.com.br/images/logo.png" alt="CalcMed Logo" width="200" style="display: block; border: 0;">
+    </td>
+  </tr>
+</table>`,
+
+      'c-accent': `<!-- Faixas de Acento por Fluxo -->
+<div style="padding: 10px 0;">
+  <span style="font-family: sans-serif; font-size: 11px; color: #94A3B8; display: block; margin-bottom: 4px;">Teal — Onboarding / Educacional (#00B4D8)</span>
+  <table border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr><td height="4" style="background-color: #00B4D8; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+  </table>
+</div>`,
+
+      'c-hero': `<!-- Bloco Hero - Headline Outfit -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 32px 24px 16px 24px;" class="email-card-grey">
+      <h1 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 24px; font-weight: 700; line-height: 32px; color: #1E293B; margin: 0; letter-spacing: -0.02em;" class="email-text-title">
+        Olá, <span class="dyn-var-name">Luis</span>! Veja a taxa de infusão exata abaixo
+      </h1>
+    </td>
+  </tr>
+</table>`,
+
+      'c-body': `<!-- Corpo de Texto Escaneável (Sem Travessões) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 0 24px 24px 24px; font-family: 'Inter', sans-serif; font-size: 16px; line-height: 24px; color: #334155;" class="email-text-body">
+      <p style="margin-bottom: 16px;">O cálculo de dosagens críticas sob estresse no PS exige exatidão imediata para garantir a segurança clínica.</p>
+    </td>
+  </tr>
+</table>`,
+
+      'c-cards': `<!-- Bento Box de Destaques Clínicos (Linear/Vercel Aesthetic) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 0 24px 24px 24px;" class="email-card-grey">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FAFAF7; border: 1px solid #EEEAE0; border-radius: 12px; border-collapse: separate;" class="email-card-elevado">
+        <tr>
+          <td align="center" style="padding: 24px 16px; border-bottom: 1px dashed #EEEAE0;" class="email-divider">
+            <span style="font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 0.12em;" class="email-text-body">DOSE DE BOMBA RECOMENDADA</span>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 36px; font-weight: 700; color: #00B4D8; margin-top: 8px;" class="dyn-var-dose">21.6 mL/h</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`,
+
+      'c-cta': `<!-- Botão CTA Bulletproof à prova de Outlook (Word Engine) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 32px 24px;" align="center" class="email-card-grey">
+      <div>
+        <a href="https://calcmed.design" style="background-color:#00B4D8; border-radius:6px; color:#ffffff; display:inline-block; font-family:'Inter', sans-serif; font-size:16px; font-weight:700; line-height:48px; text-align:center; text-decoration:none; width:280px;">Acessar no Plantão</a>
+      </div>
+    </td>
+  </tr>
+</table>`,
+
+      'c-nps': `<!-- Widget NPS 0-10 Premium (Linear-clean) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 24px; border: 1px solid #EEEAE0; border-radius: 12px; background-color: #FAFAF7;" class="email-card-grey">
+      <div style="display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px;">
+        <a href="#" style="background:#10B981; color:#FFF; text-align:center; padding:12px 0; border-radius:6px; font-weight:700; font-size:12px; text-decoration:none; font-family:'Outfit', sans-serif;">10</a>
+      </div>
+    </td>
+  </tr>
+</table>`,
+
+      'c-quiz': `<!-- Quiz Interativo em CSS Puro (Checkbox Hack) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 24px;" class="email-card-grey">
+      <div style="border: 1px solid #EEEAE0; border-radius: 12px; padding: 24px; background-color: #FAFAF7;">
+        <p style="font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; color: #1E293B; margin-bottom: 16px;">
+          Paciente em PCR por FV. Qual a conduta logo após carregar o desfibrilador?
+        </p>
+      </div>
+    </td>
+  </tr>
+</table>`,
+
+      'c-tabs': `<!-- Abas Clínicas Interativas (Adulto/Pediatria) em CSS Puro para E-mail -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td style="padding: 24px;" class="email-card-grey">
+      <input type="radio" id="tab-adulto" name="clinico-tabs" checked style="display:none !important;">
+    </td>
+  </tr>
+</table>`,
+
+      'c-footer': `<!-- Footer Legal (Unsubscribe + LGPD) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; border-collapse: collapse; border-radius: 8px;" class="email-card">
+  <tr>
+    <td align="center" style="padding: 24px; font-family: 'Inter', sans-serif; font-size: 12px; line-height: 18px; color: #94A3B8;" class="email-card-grey">
+      CALCMED LTDA — Av. Paulista, 1000 - São Paulo/SP
+    </td>
+  </tr>
+</table>`,
+
+      't-educ': `<!-- Arquétipo 1: Educacional / Boas-vindas (Exemplo: D0 Onboarding Free) -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #00B4D8; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+  <tr>
+    <td align="center" style="padding: 32px 0;" class="email-card-grey">
+      <img src="https://calcmed.com.br/images/logo.png" alt="CalcMed Logo" width="200" style="display:block;">
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 32px 24px 16px 24px;" class="email-card-grey">
+      <h1 style="font-family:'Outfit', sans-serif; font-size:24px; font-weight:700; line-height:32px; color:#1E293B; margin:0; letter-spacing: -0.02em;">
+        Olá, <span class="dyn-var-name">Luis</span>! Seja bem-vindo ao CalcMed
+      </h1>
+    </td>
+  </tr>
+</table>`,
+
+      't-case': `<!-- Arquétipo 2: Caso de Uso -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #00B4D8; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+  <tr>
+    <td align="center" style="padding: 32px 0;" class="email-card-grey">
+      <img src="https://calcmed.com.br/images/logo.png" alt="CalcMed Logo" width="200" style="display:block;">
+    </td>
+  </tr>
+</table>`,
+
+      't-conv': `<!-- Arquétipo 3: Conversão -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #1E293B; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+</table>`,
+
+      't-alert': `<!-- Arquétipo 4: Alerta -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #DC2626; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+</table>`,
+
+      't-transp': `<!-- Arquétipo 5: Transparência -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #1E293B; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+</table>`,
+
+      't-nps': `<!-- Arquétipo 6: Feedback / NPS -->
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FFFFFF; max-width: 600px; margin: 0 auto; border-collapse: collapse; border: 1px solid #E2E8F0; border-radius: 8px; overflow:hidden;" class="email-container">
+  <tr><td height="4" style="background-color: #00B4D8; line-height: 4px; font-size: 4px;">&nbsp;</td></tr>
+</table>`
+    };
+
+    const iaPrompts = {
+      'c-header': 'Close-up on doctor holding iPhone, glowing blue logo on dark clean ER backdrop --ar 16:9',
+      'c-accent': 'Abstract clean background with simple lines and cyan lights --ar 16:9',
+      'c-hero': 'Macro photography of medical monitor displaying dosage data --ar 16:9',
+      'c-body': 'Minimal line drawing of a doctor at their desk on warm white --ar 1:1',
+      'c-cards': 'Premium bento layout showing numbers in glowing blue neon --ar 16:9',
+      'c-cta': 'Sleek button with clean UI shadow and cyan metallic accents --ar 4:3',
+      'c-nps': 'Minimal scale metric interface showing green-to-red points --ar 16:9',
+      'c-quiz': 'Clean quiz board on paper texture with options checkmark vector --ar 1:1',
+      'c-tabs': 'Abstract tab interface showing neon tags for Adult and Pediatric --ar 16:9',
+      'c-footer': 'Minimal text line on clean concrete wall aesthetic background --ar 16:9',
+      't-educ': 'Welcome onboarding graphic: sleek iPhone displaying healthcare statistics --ar 4:3',
+      't-case': 'Close-up of modern syringe pump displaying critical dose info --ar 16:9',
+      't-conv': 'Gold shining medical star award trophy, glassmorphism design --ar 1:1',
+      't-alert': 'Dramatic red emergency signal light in dark high-tech clinic --ar 16:9',
+      't-transp': 'Minimalist signature card on warm luxury textured background --ar 4:3',
+      't-nps': 'Scale graph metric dashboard UI in clean vector layout --ar 16:9'
+    };
+
+    const inspectDetails = {
+      'c-header': { name: 'Header de Marca', spec: 'Largura: 100% | Padding: 32px | Logo: 200px | Borda: 1px bottom', safe: 'Outlook/Gmail Safe nativo. Sem restrições.' },
+      'c-accent': { name: 'Faixas de Acento', spec: 'Altura: 4px | Cores: Teal (#00B4D8), Red (#DC2626)', safe: 'Outlook/Gmail Safe nativo.' },
+      'c-hero': { name: 'Títulos Hero', spec: 'Fonte: Outfit (700) | Tamanho: 24px | Linha: 32px', safe: 'Fontes customizadas caem para sans-serif no Outlook Desktop.' },
+      'c-body': { name: 'Corpo Escaneável', spec: 'Fonte: Inter | Tamanho: 16px | Linha: 24px | Cor: #334155', safe: 'Compatibilidade total.' },
+      'c-cards': { name: 'Cards Bento Posologia', spec: 'Fundo: #FAFAF7 | Borda: 1px | Curva: 12px | Divider: Dashed', safe: 'Outlook ignora cantos arredondados e borda tracejada em alguns clientes.' },
+      'c-cta': { name: 'Botões Bulletproof', spec: 'Fundo: #00B4D8 | Fonte: Inter (700) | Largura: 280px', safe: 'Usa VML/tabelas para forçar largura e padding no Outlook Desktop.' },
+      'c-nps': { name: 'Widget NPS 0-10', spec: 'Colunas: 11 | Gap: 4px | Fundo: Estado sutil', safe: 'Usa grid/inline blocks. Gmail app inverte cores no Dark Mode.' },
+      'c-quiz': { name: 'Quiz Clínico CSS', spec: 'Interativo: Sim | Selectors: Checkbox Hack (~ e :checked)', safe: 'Funciona no Apple Mail/iOS. Gmail/Outlook exibem as duas respostas abertas.' },
+      'c-tabs': { name: 'Abas Clínicas CSS', spec: 'Interativo: Sim | Selectors: Checked ~ Div', safe: 'Funciona no Apple Mail/iOS. Fallback mostra as duas abas expandidas verticalmente.' },
+      'c-footer': { name: 'Footer Legal', spec: 'Padding: 24px | Fonte: Inter | Tamanho: 12px | Cor: #94A3B8', safe: 'Compatibilidade total.' }
+    };
+
+    let activeMainTab = 'components';
+    let currentDeviceMode = 'desktop';
+    let activeThemeMode = 'light';
+    let currentActiveKey = 'c-header';
+    let inspectModeActive = false;
+    let simulatorMode = 'default';
+    let editorInstance;
+
+    // Inicializa Monaco Editor
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      editorInstance = monaco.editor.create(document.getElementById('monaco-editor-container'), {
+        value: emailComponents[currentActiveKey],
+        language: 'html',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: 12,
+        fontFamily: "'JetBrains Mono', monospace"
+      });
+
+      editorInstance.onDidChangeModelContent(() => {
+        applyLiveCode();
+      });
+
+      applyLiveCode();
+    });
+
+    // Controla o modo Inspect do Figma no Preview
+    function toggleInspectMode() {
+      inspectModeActive = !inspectModeActive;
+      const btn = document.getElementById('inspect-toggle-btn');
+      const body = document.body;
+
+      if (inspectModeActive) {
+        btn.innerText = '🔍 Inspect Mode: On';
+        btn.classList.add('active');
+        body.classList.add('inspect-active');
+        setupInspectEvents();
+      } else {
+        btn.innerText = '🔍 Inspect Mode: Off';
+        btn.classList.remove('active');
+        body.classList.remove('inspect-active');
+        document.getElementById('element-inspect-popover').style.display = 'none';
+        removeInspectEvents();
+      }
+    }
+
+    function setupInspectEvents() {
+      const container = document.getElementById('render-content-box');
+      container.addEventListener('mousemove', handleInspectMouseMove);
+      container.addEventListener('mouseleave', handleInspectMouseLeave);
+      container.addEventListener('click', handleInspectClick);
+    }
+
+    function removeInspectEvents() {
+      const container = document.getElementById('render-content-box');
+      container.removeEventListener('mousemove', handleInspectMouseMove);
+      container.removeEventListener('mouseleave', handleInspectMouseLeave);
+      container.removeEventListener('click', handleInspectClick);
+    }
+
+    function handleInspectMouseMove(e) {
+      const target = e.target.closest('[class*="email-"]');
+      if (!target) return;
+
+      const popover = document.getElementById('element-inspect-popover');
+      popover.style.display = 'block';
+      popover.style.left = (e.pageX + 15) + 'px';
+      popover.style.top = (e.pageY + 15) + 'px';
+
+      const detail = inspectDetails[currentActiveKey] || { name: 'Elemento', spec: 'Largura: 100%', safe: 'Outlook Safe' };
+      document.getElementById('inspect-el-name').innerText = detail.name;
+      document.getElementById('inspect-el-details').innerHTML = `
+        <li><strong>Specs:</strong> ${detail.spec}</li>
+        <li><strong>Compatibilidade:</strong> ${detail.safe}</li>
+      `;
+    }
+
+    function handleInspectMouseLeave() {
+      document.getElementById('element-inspect-popover').style.display = 'none';
+    }
+
+    function handleInspectClick(e) {
+      e.preventDefault();
+      // Ao clicar, podemos alternar para o editor e focar o Monaco no elemento
+    }
+
+    // Gerencia o seletor de simulação de Inbox
+    function changeSimulator(mode) {
+      simulatorMode = mode;
+      document.getElementById('sim-btn-default').classList.remove('active');
+      document.getElementById('sim-btn-outlook').classList.remove('active');
+
+      document.getElementById(`sim-btn-${mode}`).classList.add('active');
+
+      const wrapper = document.getElementById('canvas-scroll-container');
+      if (mode === 'outlook') {
+        wrapper.classList.add('sim-outlook');
+      } else {
+        wrapper.classList.remove('sim-outlook');
+      }
+    }
+
+    // Alterna a aba do Dashboard
+    function changeMainTab(tab) {
+      activeMainTab = tab;
+      document.getElementById('tab-btn-components').classList.remove('active');
+      document.getElementById('tab-btn-templates').classList.remove('active');
+      document.getElementById('tab-btn-handoff').classList.remove('active');
+      
+      const sidebarLeft = document.getElementById('app-sidebar-left');
+      const editorRight = document.getElementById('app-editor-right');
+      const singleFrame = document.getElementById('device-preview-frame');
+      const splitContainer = document.getElementById('device-split-container');
+      const handoffView = document.getElementById('handoff-doc-view');
+      const deviceControls = document.getElementById('device-controls-group');
+      const ruler = document.getElementById('workspace-ruler');
+
+      sidebarLeft.style.display = 'flex';
+      editorRight.style.display = 'flex';
+      handoffView.style.display = 'none';
+      ruler.style.display = 'flex';
+      deviceControls.style.opacity = '1';
+      deviceControls.style.pointerEvents = 'all';
+
+      if (tab === 'handoff') {
+        sidebarLeft.style.display = 'none';
+        editorRight.style.display = 'none';
+        singleFrame.style.display = 'none';
+        splitContainer.style.display = 'none';
+        handoffView.style.display = 'block';
+        ruler.style.display = 'none';
+        deviceControls.style.opacity = '0.3';
+        deviceControls.style.pointerEvents = 'none';
+        document.getElementById('tab-btn-handoff').classList.add('active');
+      } else if (tab === 'components') {
+        document.getElementById('tab-btn-components').classList.add('active');
+        document.getElementById('menu-components').style.display = 'flex';
+        document.getElementById('menu-templates').style.display = 'none';
+        
+        changeDevice(currentDeviceMode);
+        selectItem('c-header');
+      } else {
+        document.getElementById('tab-btn-templates').classList.add('active');
+        document.getElementById('menu-components').style.display = 'none';
+        document.getElementById('menu-templates').style.display = 'flex';
+        
+        changeDevice(currentDeviceMode);
+        selectItem('t-educ');
+      }
+    }
+
+    // Seleciona item e atualiza assistente de IA
+    function selectItem(key) {
+      currentActiveKey = key;
+      document.querySelectorAll('.menu-link').forEach(link => link.classList.remove('active'));
+      
+      const sidebarId = activeMainTab === 'components' ? 'menu-components' : 'menu-templates';
+      const link = document.querySelector("#" + sidebarId + " .menu-link[onclick*=\"'" + key + "'\"]");
+      if (link) link.classList.add('active');
+
+      if (editorInstance && emailComponents[key]) {
+        editorInstance.setValue(emailComponents[key]);
+      }
+
+      // Atualiza prompt de IA
+      const promptText = iaPrompts[key] || 'No IA prompts recommended.';
+      document.getElementById('ia-prompt-text-box').innerHTML = `
+        "${promptText}"
+        <span>Copiar Prompt</span>
+      `;
+    }
+
+    // Copia prompt de IA
+    function copyIAPrompt() {
+      const promptText = iaPrompts[currentActiveKey] || '';
+      navigator.clipboard.writeText(promptText).then(() => {
+        const box = document.getElementById('ia-prompt-text-box');
+        const span = box.querySelector('span');
+        span.innerText = 'Copiado!';
+        span.style.color = '#10B981';
+        setTimeout(() => {
+          span.innerText = 'Copiar Prompt';
+          span.style.color = '#00B4D8';
+        }, 1500);
+      });
+    }
+
+    function applyLiveCode() {
+      if (!editorInstance) return;
+      let code = editorInstance.getValue();
+
+      const nameVar = document.getElementById('var-name').value;
+      const doseVar = document.getElementById('var-dose').value;
+      
+      let processedCode = code
+        .replace(/Luis/g, nameVar)
+        .replace(/21.6 mL\/h/g, doseVar);
+
+      const renderBox = document.getElementById('render-content-box');
+      const renderLight = document.getElementById('split-render-light');
+      const renderDark = document.getElementById('split-render-dark');
+
+      if (currentDeviceMode === 'split') {
+        renderLight.innerHTML = processedCode;
+        renderDark.innerHTML = processedCode;
+      } else {
+        renderBox.innerHTML = processedCode;
+      }
+    }
+
+    function formatCode() {
+      if (editorInstance) {
+        editorInstance.getAction('editor.action.formatDocument').run();
+      }
+    }
+
+    function updateVariables() {
+      applyLiveCode();
+    }
+
+    function changeDevice(mode) {
+      currentDeviceMode = mode;
+      document.getElementById('device-btn-desktop').classList.remove('active');
+      document.getElementById('device-btn-tablet').classList.remove('active');
+      document.getElementById('device-btn-mobile').classList.remove('active');
+      document.getElementById('device-btn-split').classList.remove('active');
+      
+      document.getElementById(`device-btn-${mode}`).classList.add('active');
+      
+      const singleFrame = document.getElementById('device-preview-frame');
+      const splitContainer = document.getElementById('device-split-container');
+      const themeContainer = document.getElementById('theme-toggles-container');
+
+      singleFrame.className = 'preview-frame';
+
+      if (mode === 'split') {
+        singleFrame.style.display = 'none';
+        splitContainer.style.display = 'flex';
+        themeContainer.style.display = 'none';
+      } else {
+        singleFrame.style.display = 'block';
+        splitContainer.style.display = 'none';
+        themeContainer.style.display = 'flex';
+
+        if (mode === 'desktop') {
+          singleFrame.classList.add('frame-desktop-border');
+        } else if (mode === 'tablet') {
+          singleFrame.classList.add('frame-ipad');
+        } else if (mode === 'mobile') {
+          singleFrame.classList.add('frame-iphone-pro');
+        }
+      }
+      
+      applyLiveCode();
+    }
+
+    function changeTheme(theme) {
+      activeThemeMode = theme;
+      const frame = document.getElementById('device-preview-frame');
+      
+      document.getElementById('theme-btn-light').classList.remove('active');
+      document.getElementById('theme-btn-dark').classList.remove('active');
+
+      if (theme === 'dark') {
+        document.getElementById('theme-btn-dark').classList.add('active');
+        frame.classList.add('theme-dark-email');
+      } else {
+        document.getElementById('theme-btn-light').classList.add('active');
+        frame.classList.remove('theme-dark-email');
+      }
+    }
+
+    function copyLiveCode() {
+      if (!editorInstance) return;
+      const code = editorInstance.getValue();
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.editor-btn');
+        btn.innerText = 'Copiado!';
+        btn.style.backgroundColor = '#10B981';
+        setTimeout(() => {
+          btn.innerText = 'Copiar';
+          btn.style.backgroundColor = '#00B4D8';
+        }, 2000);
+      });
+    }
+
+    function resetLiveCode() {
+      if (editorInstance && emailComponents[currentActiveKey]) {
+        editorInstance.setValue(emailComponents[currentActiveKey]);
+      }
+    }
+  </script>
+</body>
+</html>
+

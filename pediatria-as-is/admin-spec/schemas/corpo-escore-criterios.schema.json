@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-escore-criterios.schema.json",
+  "title": "Corpo do molde T4 escore-por-criterios (corpo.estadiamento)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'escore-por-criterios'. Estadiamento por regras booleanas, NAO por soma de pontos (difere de T3). Avalia regras_estagio EM ORDEM; primeira condicao verdadeira define o estagio (badge). Ex.: IRA KDIGO (estagios 1/2/3), PPS (cascata de selects -> percentual). Fonte: 03-backend-json.md §2.4, 01-sistema-de-tipos §2 T4.",
+  "x-status": "[PROPOSTA]",
+  "type": "object",
+  "required": ["eixos", "regras_estagio"],
+  "properties": {
+    "eixos": {
+      "type": "array",
+      "description": "Variaveis de decisao (ex.: creatinina, debito urinario; deambulacao/atividade/autocuidado da PPS).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "tipo": { "enum": ["number", "select"] }
+        }
+      }
+    },
+    "regras_estagio": {
+      "type": "array",
+      "description": "Avaliadas em ORDEM; primeira condicao verdadeira ganha. Validate (camada 2): devem cobrir o dominio sem buraco e ser mutuamente coerentes.",
+      "items": {
+        "type": "object",
+        "required": ["estagio", "condicao"],
+        "properties": {
+          "estagio": { "type": "string" },
+          "condicao": { "type": "string", "description": "expr booleana DSL fechada (§4)." },
+          "texto": { "type": "string" }
+        }
+      }
+    },
+    "sub_calc": {
+      "type": ["object", "null"],
+      "description": "Calc embutida opcional (ex.: Cockcroft dentro do IRA)."
+    },
+    "imagem_apoio": {
+      "type": ["string", "null"],
+      "description": "FLAG: PPS usa JPG (arte fechada), nao dado estruturado."
+    }
+  }
+}

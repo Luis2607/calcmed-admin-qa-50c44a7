@@ -1,0 +1,869 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CalcMed · Central de Pagamento e Planos</title>
+<style>
+  :root{
+    --bg:#0f1115; --surface:#171a21; --surface-2:#1e222b; --surface-3:#242936;
+    --line:#2a2f3a; --line-soft:#232833;
+    --ink:#eef1f6; --ink-soft:#aab3c2; --ink-mute:#6f7787;
+    --teal:#1fb6c9; --teal-deep:#0c8aa0;
+    --gold:#e8b84b; --gold-bg:#2a2312;
+    --good:#31c48d; --good-bg:#12291f; --warn:#f5b545; --warn-bg:#2c230f;
+    --bad:#f0637a; --bad-bg:#2c141a;
+    --r:14px; --r-sm:9px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(0.2,0,0,1);
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 16px rgba(0,0,0,.22);
+    --shadow-lift:0 2px 4px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.34);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;font-size:16px;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-variant-numeric:tabular-nums}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 22px}
+  h1,h2,h3,h4{text-wrap:balance} p,li,.lede,.sub{text-wrap:pretty}
+  a{color:var(--teal)}
+
+  header{padding:50px 0 26px;background:radial-gradient(1100px 380px at 12% -20%,rgba(31,182,201,.16),transparent 60%)}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--teal);background:rgba(31,182,201,.1);border:1px solid rgba(31,182,201,.25);padding:6px 12px;border-radius:100px}
+  h1{font-size:clamp(28px,4.4vw,42px);line-height:1.08;margin:16px 0 10px;letter-spacing:-.02em;max-width:22ch}
+  .lede{font-size:17px;color:var(--ink-soft);max-width:66ch;margin:0}
+  .lede b{color:var(--ink)}
+  .meta{margin-top:18px;display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-mute)}
+  .meta b{color:var(--ink-soft);font-weight:600}
+  .deadline{margin-top:16px;background:var(--bad-bg);border:1px solid rgba(240,99,122,.4);border-left:4px solid var(--bad);border-radius:var(--r-sm);padding:12px 16px;font-size:14.5px;color:var(--ink);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .deadline b{color:var(--bad)} .deadline .cd{font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--bad);color:#1a0509;padding:3px 9px;border-radius:100px}
+
+  nav.tabs{position:sticky;top:0;z-index:20;background:rgba(15,17,21,.9);backdrop-filter:blur(12px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:6px}
+  nav.tabs .wrap{display:flex;gap:4px;flex-wrap:wrap;padding:9px 22px}
+  .tab{display:inline-flex;align-items:center;gap:7px;min-height:40px;font-size:13.5px;font-weight:500;color:var(--ink-soft);
+    background:transparent;border:1px solid transparent;border-radius:100px;padding:6px 14px;cursor:pointer;font-family:inherit;
+    transition-property:color,background-color,border-color,scale;transition-duration:.16s;transition-timing-function:var(--ease)}
+  .tab:hover{color:var(--ink);background:var(--surface-2)} .tab:active{scale:.96}
+  .tab.active{color:#04222a;background:var(--teal);font-weight:600}
+  .tab .num{font-size:11px;opacity:.7}
+
+  main{padding:14px 0 30px}
+  .panel{display:none} .panel.active{display:block;animation:fade .4s var(--ease)}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.panel.active{animation:none}}
+
+  section.blk{padding:24px 0;border-bottom:1px solid var(--line-soft)}
+  section.blk:last-child{border-bottom:none}
+  h2{font-size:23px;letter-spacing:-.015em;margin:0 0 4px} h2 .n{color:var(--teal);margin-right:9px;font-size:18px}
+  h3{font-size:16.5px;margin:22px 0 8px} h4{font-size:14.5px;margin:0 0 6px}
+  .sub{color:var(--ink-soft);margin:0 0 16px;font-size:15px;max-width:76ch}
+
+  .grid{display:grid;gap:14px}
+  .g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:860px){.g4,.g3,.g2{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+  .card h3{margin:0 0 6px;font-size:15.5px} .card h4{margin:0 0 5px} .card p{margin:0;color:var(--ink-soft);font-size:13.5px}
+  .card .ic{width:32px;height:32px;border-radius:var(--r-sm);display:grid;place-items:center;background:rgba(31,182,201,.12);color:var(--teal);font-size:15px;margin-bottom:11px;font-weight:700}
+  .card.pop{border-color:var(--teal-deep);box-shadow:var(--shadow-lift)}
+  .card.black{border-color:#3a3320;background:linear-gradient(180deg,rgba(232,184,75,.06),transparent)}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:13.5px;border:1px solid var(--line-soft);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line-soft)}
+  thead th{background:var(--surface-2);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-mute);font-weight:600}
+  tbody tr:last-child td{border-bottom:none} td:first-child,th:first-child{font-weight:600;color:var(--ink)}
+  .scroll{overflow-x:auto;border-radius:var(--r);margin-bottom:4px}
+
+  table[data-decision] tbody tr{cursor:pointer;transition-property:background-color;transition-duration:.16s}
+  table[data-decision] tbody tr:hover{background:var(--surface-2)} table[data-decision] tbody tr:active{scale:.996}
+  table[data-decision] tbody tr.chosen{background:rgba(49,196,141,.09)}
+  table[data-decision] tbody tr td:first-child{position:relative;padding-left:36px}
+  table[data-decision] tbody tr td:first-child::before{content:"";position:absolute;left:13px;top:14px;width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink-mute);transition-property:border-color,background;transition-duration:.16s}
+  table[data-decision] tbody tr.chosen td:first-child::before{border-color:var(--good);background:radial-gradient(circle,var(--good) 0 45%,transparent 55%)}
+
+  .pill{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:100px;white-space:nowrap}
+  .p-good{background:var(--good-bg);color:var(--good)} .p-warn{background:var(--warn-bg);color:var(--warn)}
+  .p-bad{background:var(--bad-bg);color:var(--bad)} .p-teal{background:rgba(31,182,201,.14);color:var(--teal)}
+  .p-gold{background:var(--gold-bg);color:var(--gold)} .p-mute{background:var(--surface-3);color:var(--ink-soft)}
+
+  .note{background:var(--surface-2);border:1px solid var(--line-soft);border-left:3px solid var(--teal);border-radius:var(--r-sm);padding:14px 16px;font-size:14px;color:var(--ink-soft);margin:16px 0;line-height:1.55}
+  .note b{color:var(--ink)}
+  .note.warn{border-left-color:var(--warn)} .note.warn b{color:var(--warn)}
+  .note.bad{border-left-color:var(--bad)} .note.bad b{color:var(--bad)}
+  .note.good{border-left-color:var(--good)} .note.good b{color:var(--good)}
+
+  ul.clean{margin:8px 0;padding:0;list-style:none}
+  ul.clean li{padding:9px 0 9px 26px;position:relative;border-bottom:1px solid var(--line-soft);color:var(--ink-soft);font-size:14px}
+  ul.clean li:last-child{border-bottom:none}
+  ul.clean li::before{content:"";position:absolute;left:4px;top:16px;width:7px;height:7px;border-radius:50%;background:var(--teal)}
+  ul.clean li b{color:var(--ink);font-weight:600}
+  ul.check li::before{content:"?";background:none;color:var(--warn);font-weight:800;top:8px;left:3px;width:auto;height:auto;font-size:14px}
+  ul.done li::before{content:"✓";background:none;color:var(--good);font-weight:800;top:8px;left:2px;width:auto;height:auto;font-size:13px}
+
+  details{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-sm);margin:10px 0;overflow:hidden}
+  summary{cursor:pointer;padding:13px 16px;font-size:14px;font-weight:600;color:var(--ink);list-style:none;display:flex;align-items:center;gap:9px;transition-property:background-color;transition-duration:.16s}
+  summary:hover{background:var(--surface-2)} summary::-webkit-details-marker{display:none}
+  summary::before{content:"▸";color:var(--teal);font-size:12px;transition-property:transform;transition-duration:.2s;transition-timing-function:var(--ease)}
+  details[open] summary::before{transform:rotate(90deg)}
+  summary .tagr{margin-left:auto;font-weight:600}
+  .det-body{padding:4px 16px 16px 16px;font-size:13.5px;color:var(--ink-soft)}
+  .det-body .copy{background:var(--bg);border:1px solid var(--line-soft);border-radius:8px;padding:11px 13px;margin:8px 0;font-size:13px;color:var(--ink)}
+  .det-body .copy .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mute);display:block;margin-bottom:3px}
+
+  .price{font-size:28px;font-weight:800;letter-spacing:-.02em;color:var(--ink)} .price small{font-size:13px;font-weight:600;color:var(--ink-mute)}
+  .cad{font-size:12.5px;color:var(--ink-mute)} .strike{color:var(--ink-mute);text-decoration:line-through;font-size:13px}
+  .full{font-size:12px;color:var(--ink-mute)}
+
+  /* segmented toggle */
+  .seg{display:inline-flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:3px}
+  .seg__btn{min-height:34px;border:none;background:transparent;color:var(--ink-soft);font-family:inherit;font-size:13px;font-weight:600;padding:5px 15px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition-property:color,background-color,scale;transition-duration:.16s;transition-timing-function:var(--ease)}
+  .seg__btn:active{scale:.96} .seg__btn.active{background:var(--teal);color:#04222a}
+  .seg__save{font-size:10.5px;font-weight:700;background:var(--gold-bg);color:var(--gold);padding:1px 6px;border-radius:100px}
+  .seg__btn.active .seg__save{background:rgba(4,34,42,.18);color:#04222a}
+  .segrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+
+  /* flowchart */
+  .fc{display:flex;flex-direction:column;gap:0;margin:10px 0}
+  .fc-row{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+  .fc-step{flex:1;min-width:150px;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-sm);padding:12px 14px;box-shadow:var(--shadow)}
+  .fc-step .s-t{font-size:13.5px;font-weight:600;color:var(--ink)} .fc-step .s-d{font-size:12px;color:var(--ink-mute);margin-top:2px}
+  .fc-step.hl{border-color:var(--teal-deep);background:linear-gradient(180deg,rgba(31,182,201,.09),transparent)}
+  .fc-step.dia{border-color:var(--gold);background:var(--gold-bg)} .fc-step.dia .s-t{color:var(--gold)}
+  .fc-step.warn{border-color:var(--warn);background:var(--warn-bg)}
+  .fc-conn{align-self:center;color:var(--teal);font-size:17px;font-weight:800;padding:6px 0}
+  .fc-branch{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:700px){.fc-branch{grid-template-columns:1fr}}
+  .fc-lane{border:1px dashed var(--line);border-radius:var(--r-sm);padding:10px;display:flex;flex-direction:column;gap:8px}
+  .fc-lane .lane-h{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mute);font-weight:700}
+  .fc-tag{font-size:11px;color:var(--teal);font-weight:600}
+
+  /* mockups */
+  .mock-pair{display:grid;grid-template-columns:288px 1fr;gap:18px;margin-top:12px;align-items:start}
+  .mock-pair.single{grid-template-columns:288px}
+  @media(max-width:760px){.mock-pair,.mock-pair.single{grid-template-columns:1fr}}
+  .mock-cap{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-mute);font-weight:700;margin-bottom:6px}
+  .phone{border:2px solid var(--line);border-radius:26px;background:var(--bg);padding:8px 8px 0;max-width:288px}
+  .phone__notch{width:64px;height:5px;border-radius:100px;background:var(--surface-3);margin:2px auto 8px}
+  .sheet{background:var(--surface);border:1px solid var(--line-soft);border-top-left-radius:18px;border-top-right-radius:18px;border-bottom:none;padding:10px 14px 16px}
+  .win{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);box-shadow:var(--shadow-lift);padding:16px;position:relative}
+  .win__x{position:absolute;top:12px;right:14px;color:var(--ink-mute);font-size:15px}
+  .handle{width:34px;height:4px;border-radius:100px;background:var(--ink-mute);opacity:.5;margin:2px auto 12px}
+  .m-chip{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:100px;background:rgba(31,182,201,.14);color:var(--teal);margin-bottom:10px}
+  .m-chip.warn{background:var(--warn-bg);color:var(--warn)} .m-chip.bad{background:var(--bad-bg);color:var(--bad)} .m-chip.gold{background:var(--gold-bg);color:var(--gold)}
+  .m-hero{width:46px;height:46px;border-radius:12px;background:rgba(31,182,201,.12);color:var(--teal);display:grid;place-items:center;font-size:20px;font-weight:800;margin-bottom:10px}
+  .m-hero.warn{background:var(--warn-bg);color:var(--warn)} .m-hero.bad{background:var(--bad-bg);color:var(--bad)}
+  .m-hero--wide{width:100%;height:78px;border-radius:10px;background:linear-gradient(120deg,rgba(31,182,201,.22),rgba(31,182,201,.04));margin-bottom:10px}
+  .m-title{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.15;margin-bottom:4px}
+  .m-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:10px}
+  .m-ben{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .m-ben::before{content:"✓";color:var(--teal);font-size:12px;font-weight:800;flex-shrink:0}
+  .m-ben.x::before{content:"—";color:var(--ink-mute)}
+  .sk{height:8px;border-radius:100px;background:var(--surface-3);display:inline-block}
+  .sk.w40{width:40%} .sk.w55{width:55%} .sk.w70{width:70%} .sk.w85{width:85%} .sk.w100{width:100%}
+  .m-prog{height:7px;border-radius:100px;background:var(--surface-3);overflow:hidden;margin:8px 0}
+  .m-prog > i{display:block;height:100%;background:var(--warn)}
+  .m-plans{display:flex;gap:8px;margin:10px 0}
+  .m-plan{flex:1;border:1px solid var(--line-soft);border-radius:var(--r-sm);padding:9px 10px}
+  .m-plan.pop{border-color:var(--teal-deep)} .m-plan.blk{border-color:#3a3320;background:linear-gradient(180deg,rgba(232,184,75,.05),transparent)}
+  .m-plan .pn{font-size:11px;color:var(--ink-mute);font-weight:700;text-transform:uppercase} .m-plan .pp{font-size:15px;font-weight:800;color:var(--ink)} .m-plan .pc{font-size:10px;color:var(--ink-mute)}
+  .m-cta{margin-top:10px;background:var(--teal);color:#04222a;font-size:13px;font-weight:700;text-align:center;padding:10px;border-radius:10px}
+  .m-cta2{margin-top:6px;color:var(--ink-soft);font-size:12.5px;text-align:center;font-weight:600}
+  .m-cta.ext{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:600} .m-cta.ext::after{content:"  ↗";color:var(--ink-mute)}
+  .m-cta.apple{background:#f4f6fb;color:#0b0d12}
+  .m-fine{font-size:10.5px;color:var(--ink-mute);margin-top:9px;line-height:1.4}
+  .m-seg{display:inline-flex;gap:3px;background:var(--surface-2);border:1px solid var(--line);border-radius:100px;padding:2px;margin-bottom:10px;font-size:11px}
+  .m-seg span{padding:3px 10px;border-radius:100px;color:var(--ink-soft)} .m-seg span.on{background:var(--teal);color:#04222a;font-weight:700}
+  .mock-notes{font-size:12.5px;color:var(--ink-soft)} .mock-notes li{margin:3px 0}
+
+  .toolbar{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+  .btn{font-family:inherit;font-size:13px;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:9px 15px;min-height:40px;cursor:pointer;transition-property:color,background-color,border-color,scale;transition-duration:.16s;transition-timing-function:var(--ease)}
+  .btn:hover{color:var(--ink);border-color:var(--ink-mute)} .btn:active{scale:.96}
+
+  .tl{position:relative;margin:6px 0 6px 8px;padding-left:22px;border-left:2px solid var(--line)}
+  .tl .ev{position:relative;padding:8px 0}
+  .tl .ev::before{content:"";position:absolute;left:-27px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--teal);border:2px solid var(--bg)}
+  .tl .ev.red::before{background:var(--bad)}
+  .tl .ev .d{font-size:12px;color:var(--teal);font-weight:700} .tl .ev.red .d{color:var(--bad)}
+  .tl .ev .t{font-size:14px;color:var(--ink-soft)} .tl .ev .t b{color:var(--ink)}
+
+  .hint{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-mute);margin:0 0 10px}
+  .hint .dot{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+  footer{padding:28px 0 60px;color:var(--ink-mute);font-size:12.5px}
+  footer code{background:var(--surface-2);padding:2px 6px;border-radius:5px;font-size:11.5px}
+  .blockers{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)} @media(max-width:760px){.blockers{grid-template-columns:1fr}}
+  .blk-item{background:var(--bad-bg);border:1px solid rgba(240,99,122,.3);border-radius:var(--r-sm);padding:12px 14px;font-size:13.5px;color:var(--ink)}
+  .blk-item b{color:var(--bad)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <span class="kicker">CalcMed 2.0 · Monetização</span>
+    <h1>Central de Pagamento e Planos</h1>
+    <p class="lede">Planos, preços, telas de venda e regras da Apple e do Google, tudo aqui. Serve pra <b>fechar as decisões juntos</b> e passar pronto pros devs. Use as guias pra navegar.</p>
+    <div class="meta">
+      <span><b>Atualizado</b> 01/07/2026</span>
+      <span><b>Fontes</b> calls 26/06 e 30/06 · congelamento 2.0 · conselho</span>
+      <span><b>Preços</b> decisão Luis 01/07</span>
+    </div>
+    <div class="deadline"><span class="cd">Prazo 06/07</span> <span><b>Contrato da Apple até 06/07/2026.</b> Sem aceitar, não existe pagamento externo legal no iPhone nesta release. Ação do eng, prazo curtíssimo.</span></div>
+  </div>
+</header>
+
+<nav class="tabs"><div class="wrap" id="tabbar">
+  <button class="tab active" data-p="visao"><span class="num">01</span> Visão geral</button>
+  <button class="tab" data-p="planos"><span class="num">02</span> Planos & preços</button>
+  <button class="tab" data-p="paga"><span class="num">03</span> Como o cliente paga</button>
+  <button class="tab" data-p="lojas"><span class="num">04</span> Regras das lojas</button>
+  <button class="tab" data-p="entrega"><span class="num">05</span> Plano de entrega</button>
+</div></nav>
+
+<main class="wrap">
+
+<!-- ===== 01 VISÃO ===== -->
+<section class="panel active" id="visao">
+  <section class="blk">
+    <h2><span class="n">01</span>A estratégia pra deixar simples</h2>
+    <p class="sub"><b>A ideia central:</b> a dificuldade não está em cobrar, está na mecânica das lojas (Apple/Google). Estas quatro escolhas contornam essa mecânica e cortam quase toda a complexidade técnica. Com elas fechadas, o time entrega muito mais rápido.</p>
+    <div class="grid g4">
+      <div class="card"><div class="ic">1</div><h3>Cobrança fora do app</h3><p>O pagamento acontece no navegador (Stripe/Woovi). O app mostra os planos e leva pra lá. A Apple e o Google não deixam cobrar por dentro do app do nosso jeito.</p></div>
+      <div class="card"><div class="ic">2</div><h3>Trocar de plano é venda nova</h3><p>Ninguém "sobe de plano" de verdade. A pessoa compra o novo e a gente dá um tempo de bônus pelo que já pagou. Evita a parte mais cara das lojas.</p></div>
+      <div class="card"><div class="ic">3</div><h3>Apple/Google é só base antiga</h3><p>Quem assinou pela Apple ou Google no passado (recorrente antigo) continua sendo cobrado por lá até cancelar. <b>Ninguém assina novo por lá hoje</b> — toda assinatura nova é externa. Trazer essa base é campanha separada, depois.</p></div>
+      <div class="card"><div class="ic">4</div><h3>Anual é pagamento único</h3><p>O plano anual é pago de uma vez. Na tela mostramos só "R$ 27,90/mês, cobrado anualmente". O valor cheio do ano só aparece na hora de pagar. Sem parcelas.</p></div>
+    </div>
+    <div class="note good"><b>Por que isso importa:</b> sem essas escolhas, pagamento vira o item mais caro e demorado da release (mexer no pagamento das lojas, upgrade real, migração da base). Com elas, vira uma task pequena. É isso que decide se a release sai no prazo.</div>
+  </section>
+  <section class="blk">
+    <h3>Preços num relance</h3>
+    <div class="segrow">
+      <span class="sub" style="margin:0">Alterne pra ver mensal e anual. O valor do ano aparece só no checkout.</span>
+      <div class="seg" data-billing-toggle><button class="seg__btn" data-bill="mensal">Mensal</button><button class="seg__btn active" data-bill="anual">Anual <span class="seg__save">2 meses grátis</span></button></div>
+    </div>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Plano</th><th>Preço (vitrine)</th><th>No checkout</th><th>Papel</th></tr></thead>
+      <tbody>
+        <tr><td>Free</td><td>R$ 0</td><td>—</td><td>Porta de entrada / degustação</td></tr>
+        <tr><td>Pro <span class="pill p-teal">Popular</span></td><td><b data-price="pro" data-field="main">R$ 27,90</b> <span class="cad" data-price="pro" data-field="cad">/mês, cobrado anualmente</span></td><td class="full" data-price="pro" data-field="full">R$ 334,80/ano</td><td>Plano-alvo (o que se quer fechar)</td></tr>
+        <tr><td>Black <span class="pill p-gold">só anual</span></td><td><b data-price="black" data-field="main">R$ 44,90</b> <span class="cad" data-price="black" data-field="cad">/mês, cobrado anualmente</span></td><td class="full" data-price="black" data-field="full">R$ 538,80/ano</td><td>Âncora premium</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note"><b>Onde estamos:</b> a cobrança é a maior frente e trava numa coisa: validando o escopo, precisamos contratar <b>2 devs dedicados só pra ela (um de front, um de back de pagamentos)</b>. O app deve ficar pronto pra teste por volta de 18/07. A parte de pagamento pode entrar na semana de 19 a 25/07. Lançamento previsto pro começo de agosto. Detalhes na guia Plano de entrega.</div>
+  </section>
+  <section class="blk">
+    <h3>O que trava o lançamento (bloqueadores)</h3>
+    <p class="sub">Quatro coisas que, se não resolvidas, impedem subir a release. Detalhe na guia Regras das lojas.</p>
+    <div class="blockers">
+      <div class="blk-item"><b>1. Jeito de pagar no iPhone</b><br>Hoje o app manda pagar fora de um jeito informal. A Apple recusa a nova versão se subir assim. Precisa entrar no caminho oficial dela.</div>
+      <div class="blk-item"><b>2. Contrato da Apple até 06/07</b><br>Prazo curtíssimo. Sem aceitar, o caminho legal de pagar fora do app no iPhone nem existe nesta release.</div>
+      <div class="blk-item"><b>3. Nunca mostrar como parcelas</b><br>O anual é cobrado uma vez. Mostrar como parcelamento seria propaganda enganosa. O certo é "R$ 27,90/mês, cobrado anualmente".</div>
+      <div class="blk-item"><b>4. Arrependimento de 7 dias</b><br>Compra online exige devolução em até 7 dias, por lei. Precisa de política escrita e caminho de cancelamento. Jurídico fecha.</div>
+    </div>
+  </section>
+</section>
+
+<!-- ===== 02 PLANOS & PREÇOS ===== -->
+<section class="panel" id="planos">
+  <section class="blk">
+    <h2><span class="n">02</span>Planos & preços</h2>
+    <p class="sub">Agora são três planos, no lugar do antigo Free/Premium. O Free dá um gostinho pra pessoa querer mais. O Pro é o plano que a gente quer vender. O Black é o plano caro que faz o Pro parecer o melhor negócio.</p>
+    <div class="segrow">
+      <span class="sub" style="margin:0">Preços fechados em 01/07. Estes valem, esquece os das calls antigas.</span>
+      <div class="seg" data-billing-toggle><button class="seg__btn" data-bill="mensal">Mensal</button><button class="seg__btn active" data-bill="anual">Anual <span class="seg__save">2 meses grátis</span></button></div>
+    </div>
+    <div class="grid g3">
+      <div class="card">
+        <h3>Free</h3><div class="price">R$ 0</div>
+        <p style="margin:8px 0 0"><b>Útil.</b> Usa todo dia.</p>
+        <ul class="clean" style="margin-top:8px">
+          <li>Calculadoras essenciais + todos os conversores</li>
+          <li>Boa parte da Central de Urgência (PCR, hipoglicemia, anafilaxia, gasometria, intubação, noradrenalina...)</li>
+          <li>Escores e fluxogramas principais</li>
+          <li>Pediatria básica + receitas e documentos</li>
+          <li>Escala limitada (4 cores, sem relatório/histórico)</li>
+          <li>IA Clínica: 3 perguntas/mês</li>
+          <li>Sem eletro</li>
+        </ul>
+      </div>
+      <div class="card pop">
+        <h3>Pro <span class="pill p-teal">Popular</span></h3>
+        <div class="price"><span data-price="pro" data-field="main">R$ 27,90</span></div>
+        <p class="cad" style="margin:2px 0 0" data-price="pro" data-field="cad">/mês, cobrado anualmente</p>
+        <p style="margin:6px 0 0;color:var(--ink-soft);font-size:13px"><b>Personaliza.</b> Ajuda na rotina.</p>
+        <ul class="clean" style="margin-top:8px">
+          <li>Tudo do Free +</li>
+          <li>Todas as funcionalidades desbloqueadas</li>
+          <li>Protocolos completos: CAD, AVC, IAM, TEP, Sepse (com trombólise)</li>
+          <li>Todas as drogas vasoativas, distúrbios HE, antibióticos, VM</li>
+          <li>Escala completa (cores ilimitadas, histórico, relatório p/ NF)</li>
+          <li>Eletro: 1 ECG + 1 Telecardio/mês</li>
+          <li>IA Clínica: até 20/mês</li>
+        </ul>
+      </div>
+      <div class="card black">
+        <h3>Black <span class="pill p-gold">por convite</span></h3>
+        <div class="price"><span data-price="black" data-field="main">R$ 44,90</span></div>
+        <p class="cad" style="margin:2px 0 0" data-price="black" data-field="cad">/mês, cobrado anualmente</p>
+        <p style="margin:6px 0 0;color:var(--ink-soft);font-size:13px"><b>Diferencia</b> como profissional.</p>
+        <ul class="clean" style="margin-top:8px">
+          <li>Tudo do Pro +</li>
+          <li>Eletro: 3 ECGs + 3 Telecardios/mês</li>
+          <li>IA Clínica: até 100/mês</li>
+          <li>Descontos com parceiros</li>
+          <li>Comunidade exclusiva (grupo fechado)</li>
+          <li>Voz no produto</li>
+          <li>Suporte direto com a equipe</li>
+        </ul>
+        <div style="margin:10px 0 0;font-size:12px;color:var(--gold);background:var(--gold-bg);border-radius:8px;padding:8px 10px"><b>Por convite / lista de espera.</b> Sem "assinar agora" público, de propósito: eleva a percepção de valor do Pro.</div>
+      </div>
+    </div>
+    <div class="note good"><b>A lógica dos três planos:</b> o Pro é o alvo, o que a gente quer vender. O <b>Black não é vendido publicamente</b> — é por convite/lista de espera, existe pra ser aspiracional e fazer o Pro parecer o passo natural (não ancora por preço, ancora por exclusividade). O Free é generoso e usável de propósito: a pessoa usa, gosta, e bate no limite do Pro na hora certa.</div>
+
+    <h3>Como o preço aparece (regras fechadas)</h3>
+    <ul class="clean done">
+      <li><b>Mostrar sempre o "por mês".</b> No anual aparece "R$ 27,90/mês", não o valor do ano inteiro. Número grande assusta.</li>
+      <li><b>Valor do ano só na hora de pagar.</b> Na tela de planos ninguém vê o 334,80 nem o 538,80.</li>
+      <li><b>Anual pago de uma vez, sem parcelar.</b> Nem as lojas nem a Stripe têm parcelamento ligado hoje, e você decidiu lançar assim.</li>
+      <li><b>Nunca mostrar como parcelas.</b> O anual é cobrado uma vez. Mostrar como parcelamento seria propaganda enganosa. O certo é "R$ 27,90/mês, cobrado anualmente".</li>
+      <li><b>Sem cupom e sem contagem regressiva.</b> Nada de código de desconto nem relógio fake.</li>
+      <li><b>Falar em "meses grátis", nunca em "% de desconto".</b></li>
+      <li><b>Botão Mensal/Anual no topo, já abrindo no Anual.</b></li>
+    </ul>
+    <div class="note warn"><b>Falta decidir:</b> (1) valor final do Black; (2) preço depois do lançamento (lançar mais barato e subir). <b>Ideias a validar (Gustavo):</b> degustação de 5 usos e trial de tempo. <br>Conteúdo Free/Pro/Black, IA (3/20/100 por mês) e eletro (0/1/3) já vieram no doc do Gustavo (CalcMed_Planos_FREE_PRO_BLACK).</div>
+    <details><summary>Por que o valor do Black mudou <span class="tagr pill p-warn">nota</span></summary>
+      <div class="det-body">Teve uma conta errada num documento antigo (aparecia R$ 334,80 pro Black). O certo é <b>R$ 538,80</b> (12 × 44,90). O R$ 334,80 é o do Pro. Falta só você bater o martelo no valor final do Black. As calls antigas tinham 32,90/297,90 (Pro) e ~449,90 (Black); tudo substituído pelos preços de 01/07.</div>
+    </details>
+  </section>
+</section>
+
+<!-- ===== 03 COMO O CLIENTE PAGA ===== -->
+<section class="panel" id="paga">
+  <section class="blk">
+    <h2><span class="n">03</span>Como o cliente paga</h2>
+    <p class="sub">A jornada inteira: como a pessoa compra, como troca de plano e como cancela. Tudo consequência da mesma decisão: a cobrança é fora do app.</p>
+
+    <h3>O caminho da compra (app → navegador → volta pro app)</h3>
+    <div class="fc">
+      <div class="fc-step"><div class="s-t">1. App: tela de Planos</div><div class="s-d">Free / Pro / Black, abrindo no Anual</div></div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-step"><div class="s-t">2. Toca "Assinar Pro"</div></div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-branch">
+        <div class="fc-lane"><div class="lane-h">iPhone</div><div class="fc-step">Pagamento da Apple + botão pro site, lado a lado</div><div class="fc-conn">↓</div><div class="fc-step warn">Aviso da Apple (tela dela)</div><div class="fc-conn">↓</div><div class="fc-step">Abre o Safari</div></div>
+        <div class="fc-lane"><div class="lane-h">Android / Web</div><div class="fc-step">Android: tela de escolha do Google <span class="pill p-warn">confirmar</span></div><div class="fc-step">Web: direto pro checkout</div></div>
+      </div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-step"><div class="s-t">3. Checkout no navegador (Stripe/Woovi)</div><div class="s-d">aqui aparece o valor cheio do ano</div></div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-step hl"><div class="s-t">4. Volta pro app já como assinante</div><div class="s-d">o app confirma o pagamento e libera o Pro</div></div>
+    </div>
+    <div class="note"><b>Comissão por caminho:</b> site 0% · iPhone pelo site 15% · iPhone pela Apple 26%. Por isso o site é o melhor lugar pra cobrar.</div>
+
+    <h3>As telas de venda (paywalls)</h3>
+    <p class="sub">"Paywall" é a telinha que convida a assinar. Já temos 14 mapeadas (13 desenhadas). Abaixo as de venda: pra que serve, quando aparece e um rascunho visual. Clique pra abrir.</p>
+    <div class="note good"><b>Regra do paywall (doc do Gustavo):</b> a pessoa <b>nunca vê tela vazia</b>. Ela usa o recurso, vê o resultado, e o paywall aparece <b>depois</b>, fazendo upsell da versão Pro do que ela acabou de usar. Personalizado, especialmente em Potássio, Drogas Vasoativas, Intubação e Escala. Na Central de Urgência o paywall é <b>dentro</b> da funcionalidade, nunca na entrada.</div>
+    <div class="note warn"><b>Atenção:</b> os mockups já estão no modelo novo (Free/Pro/Black). O modelo ativo é "usa e bate no limite após o resultado" (regra acima). A degustação de 5 usos virou ideia a validar. Os docs em <code>tasks/modais/</code> ainda estão no modelo velho (R$ 14,90) e serão reconciliados.</div>
+
+    <details><summary>Boas-vindas (pós-cadastro) <span class="tagr pill p-teal">aquisição</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> primeira oferta logo depois do cadastro, no melhor momento (1× na vida). Se recusar, cai na degustação. O desconto em "%" foi trocado por tempo de bônus.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip">BOAS-VINDAS</span>
+              <div class="m-hero">🎁</div>
+              <div class="m-title">Pague 12 meses, use 14</div>
+              <div class="m-sub">Sua primeira oferta: 2 meses por nossa conta no anual.</div>
+              <div class="m-ben">Todas as calculadoras e a Central completa</div>
+              <div class="m-ben">IA de apoio clínico</div>
+              <div class="m-ben">Escala ilimitada com relatório pra nota fiscal</div>
+              <div class="m-plans"><div class="m-plan pop"><div class="pn">Pro anual</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês · 14 meses</div></div></div>
+              <div class="m-cta">Ativar 2 meses grátis</div><div class="m-cta2">Continuar sem</div>
+              <div class="m-fine">Depois de 14 meses, renova por <span data-price="pro" data-field="full">R$ 334,80</span>/ano. Cancele quando quiser.</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">O que aparece</div>
+            <ul class="clean mock-notes"><li>Hero de "presente": comunica tempo de bônus, não desconto em %.</li><li>3 linhas do que o Pro entrega, pra justificar o valor.</li><li>1 card só (Pro anual), sem escolha, pra não distrair a decisão.</li><li>Fineprint honesto: quando renova, por quanto, e que dá pra cancelar.</li></ul>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Degustação — primeiro contato <span class="tagr pill p-teal">aquisição</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> avisa que a pessoa ganhou 5 usos grátis dos recursos do Pro. Ela toca em qualquer recurso do Pro e usa de graça, sem assinar. Aparece pra quem fechou a boas-vindas sem assinar (1x na vida).</p>
+        <p><b>Ideia a validar (Gustavo), não é o modelo ativo:</b> degustação de <b>5 usos totais, não resetam</b>. O que vale hoje é "usa e bate no limite após o resultado" (ver Regra do paywall). Fica aqui como alternativa a testar.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip">DEGUSTAÇÃO</span>
+              <div class="m-hero">5</div>
+              <div class="m-title">Você ganhou 5 testes do Pro</div>
+              <div class="m-sub">Use qualquer recurso do Pro de graça, 5 vezes. Sem cartão, sem compromisso.</div>
+              <div class="m-ben">Todas as calculadoras premium</div>
+              <div class="m-ben">Central de Urgência completa</div>
+              <div class="m-ben">IA de apoio clínico</div>
+              <div class="m-cta">Começar a explorar</div><div class="m-cta2">Ver o Pro</div>
+              <div class="m-fine">Depois dos 5 testes, esses recursos ficam no Pro.</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">O que aparece</div>
+            <ul class="clean mock-notes">
+              <li>Contador grande "5" no topo, pra fixar quantos usos a pessoa tem.</li>
+              <li>Lista real do que dá pra experimentar (é amostra, não a lista do plano).</li>
+              <li>Tom leve, sem preço na cara. Aqui o objetivo é a pessoa usar, não comprar.</li>
+              <li>Botão leva pra usar; o link de baixo mostra o Pro pra quem já quer assinar.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Degustação — último teste <span class="tagr pill p-warn">aquisição · aviso</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> avisa que é o último dos 5 usos grátis antes desses recursos virarem Pro. Tom âmbar de aviso, no auge da vontade de usar.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip warn">ÚLTIMO TESTE</span>
+              <div class="m-hero warn">!</div>
+              <div class="m-title">Seu último teste grátis</div>
+              <div class="m-sub">Você já usou 4 dos 5. Depois deste, esse recurso é do Pro.</div>
+              <div class="m-prog"><i style="width:80%"></i></div>
+              <div class="m-plans"><div class="m-plan pop"><div class="pn">Pro anual</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês, cobrado anualmente</div></div></div>
+              <div class="m-cta">Usar agora (último)</div><div class="m-cta2">Assinar o Pro</div>
+              <div class="m-fine">Sem assinar, você mantém só o Free depois deste uso.</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">O que aparece</div>
+            <ul class="clean mock-notes">
+              <li>Barra de progresso 4/5 em âmbar: cria a sensação de "acabando".</li>
+              <li>Já mostra o card do Pro com preço (a pessoa está pronta pra decidir).</li>
+              <li>Dois caminhos: usar o último teste agora, ou já assinar.</li>
+              <li>Sem preço cheio do ano aqui, só o "por mês".</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Paywall contextual (tocou recurso do Pro) <span class="tagr pill p-teal">aquisição</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> aparece quando a pessoa Free toca um recurso do Pro, no auge da vontade de usar. É o de maior conversão.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip">● Urgências · Pro</span>
+              <div class="m-hero">🧮</div>
+              <div class="m-title">Cálcio dose</div>
+              <div class="m-sub">Esta calculadora faz parte do Pro. Libere agora.</div>
+              <div class="m-ben">Todas as calculadoras premium</div>
+              <div class="m-ben">Central de Urgência completa</div>
+              <div class="m-plans"><div class="m-plan pop"><div class="pn">Pro</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês</div></div></div>
+              <div class="m-cta">Assinar o Pro</div><div class="m-cta2">Agora não</div>
+              <div class="m-fine">Renova automaticamente. Cancele quando quiser.</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">Notas</div><ul class="clean mock-notes"><li>Chip muda conforme o recurso tocado.</li><li><b>Só o card do Pro</b> (o alvo). Black não aparece no contextual, só na Tela de Planos e no gatilho de eletro.</li><li>Copy contextual por gatilho: calculadora, relatório de escala, IA, 2º eletro.</li></ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Limite da IA — aviso e bloqueio <span class="tagr pill p-teal">aquisição</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> a IA Clínica é <b>por mês</b> (Free 3, Pro 20, Black 100). Perto do limite, aviso suave (âmbar); ao esgotar, bloqueio (vermelho). No Free faz upsell pro Pro; no Pro, pro Black.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Aviso (soft)</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip warn">QUASE LÁ</span>
+              <div class="m-title">Última pergunta do mês</div>
+              <div class="m-prog"><i style="width:66%"></i></div>
+              <div class="m-sub">No Free são 3 por mês. Renova no dia 1º.</div>
+              <div class="m-cta">Passar pro Pro (20/mês)</div><div class="m-cta2">Continuar no Free</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">Bloqueio (hard)</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip bad">BLOQUEADO</span>
+              <div class="m-hero bad">🔒</div>
+              <div class="m-title">IA do mês esgotada</div>
+              <div class="m-ben">Pro: 20 por mês</div><div class="m-ben x">Free: 3 por mês</div>
+              <div class="m-cta">Passar pro Pro</div><div class="m-cta2">Voltar mês que vem</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Upgrade Mensal → Anual <span class="tagr pill p-gold">retenção</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> convida quem é mensal a ir pro anual (rende mais). É venda nova com tempo de bônus, não upgrade de verdade (ver fluxo abaixo).</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip gold">+2 MESES GRÁTIS</span>
+              <div class="m-title">Migre pro Anual</div>
+              <div class="m-sub">Pague 12, use 14. Vale na hora.</div>
+              <div class="m-plans"><div class="m-plan"><div class="pn">Mensal</div><div class="pp">R$ 34,90</div><div class="pc">/mês</div></div><div class="m-plan pop"><div class="pn">Anual</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês · 14 meses</div></div></div>
+              <div class="m-cta">Ativar Anual</div><div class="m-cta2">Continuar no Mensal</div>
+              <div class="m-fine">É uma compra nova com tempo de bônus.</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">Notas</div><ul class="clean mock-notes"><li>Compara Mensal × Anual, Anual destacado.</li><li>Só aparece pra mensal com uso real (não no dia 1).</li></ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Cancelamento + tentativa de segurar <span class="tagr pill p-mute">retenção</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> quando a pessoa vai cancelar, pergunta o motivo e faz uma oferta. O cancelamento em si acontece no provedor externo.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Passo 1 · motivo</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <div class="m-title">Por que está saindo?</div>
+              <div class="m-sub">Sua resposta libera a oferta certa pra você.</div>
+              <div class="m-ben">Está caro</div>
+              <div class="m-ben">Não usei o suficiente</div>
+              <div class="m-ben">Faltou um recurso</div>
+              <div class="m-ben">Vou usar outro app</div>
+              <div class="m-cta">Continuar</div>
+            </div></div>
+          </div>
+          <div><div class="mock-cap">Passo 2 · oferta</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <span class="m-chip gold">ESPERA</span>
+              <div class="m-title">1 mês por nossa conta?</div>
+              <div class="m-sub">Fica mais um pouco e o próximo mês é grátis.</div>
+              <div class="m-cta">Aceitar oferta</div><div class="m-cta2">Cancelar mesmo assim</div>
+              <div class="m-fine">O cancelamento abre no provedor de pagamento.</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details><summary>Tela de Planos (destino) <span class="tagr pill p-teal">destino</span></summary>
+      <div class="det-body">
+        <p><b>Pra que serve:</b> a comparação completa dos três planos, com o botão Mensal/Anual. É pra onde vão todos os "Ver planos". No desktop é modal largo; no celular é bottom-sheet.</p>
+        <div class="mock-pair">
+          <div><div class="mock-cap">Web · modal</div>
+            <div class="win"><span class="win__x">✕</span>
+              <div class="m-title">Escolha seu plano</div>
+              <div class="m-seg"><span>Mensal</span><span class="on">Anual · 2 meses grátis</span></div>
+              <div class="m-plans">
+                <div class="m-plan"><div class="pn">Free</div><div class="pp">R$ 0</div><div class="pc">sempre</div></div>
+                <div class="m-plan pop"><div class="pn">Pro</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês</div></div>
+                <div class="m-plan blk"><div class="pn">Black</div><div class="pp" style="font-size:12px">Por convite</div><div class="pc">lista de espera</div></div>
+              </div>
+              <div class="m-cta">Assinar o Pro</div>
+              <div class="m-fine">Cobrado anualmente. Cancele quando quiser. 7 dias de arrependimento. Black é por convite.</div>
+            </div>
+          </div>
+          <div><div class="mock-cap">Mobile · bottom-sheet</div>
+            <div class="phone"><div class="phone__notch"></div><div class="sheet"><div class="handle"></div>
+              <div class="m-seg"><span>Mensal</span><span class="on">Anual</span></div>
+              <div class="m-plan pop" style="margin-bottom:8px"><div class="pn">Pro · Popular</div><div class="pp" data-price="pro" data-field="main">R$ 27,90</div><div class="pc">/mês, cobrado anualmente</div></div>
+              <div class="m-plan blk" style="margin-bottom:8px"><div class="pn">Black</div><div class="pp" style="font-size:12px">Por convite</div><div class="pc">lista de espera</div></div>
+              <div class="m-plan"><div class="pn">Free</div><div class="pp">R$ 0</div></div>
+              <div class="m-cta">Assinar o Pro</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <h3>Trocar de plano é venda nova (o "upgrade" de brinde)</h3>
+    <p class="sub">Pra ficar claro pro Gustavo: o app não faz "subir de plano" de verdade. Fazer isso do jeito das lojas é caro e cheio de regra. A gente faz diferente: trocar é comprar o novo e ganhar tempo de brinde pelo que já pagou.</p>
+    <div class="fc">
+      <div class="fc-row">
+        <div class="fc-step"><div class="s-t">Tem: plano mensal</div></div>
+        <div class="fc-conn">+</div>
+        <div class="fc-step"><div class="s-t">Ganha: 1 mês de brinde</div></div>
+        <div class="fc-conn">=</div>
+        <div class="fc-step hl"><div class="s-t">Compra: anual de 13 meses</div><div class="s-d">vale na hora</div></div>
+      </div>
+    </div>
+    <div class="fc" style="margin-top:12px">
+      <div class="fc-step dia"><div class="s-t">Onde a pessoa assinou o plano atual?</div></div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-branch">
+        <div class="fc-lane"><div class="lane-h">Stripe/Woovi (novo)</div><div class="fc-step">a gente cancela sozinho + vende o novo com bônus ✓</div></div>
+        <div class="fc-lane"><div class="lane-h">Apple/Google (legado)</div><div class="fc-step warn">a gente NÃO cancela: a pessoa cancela na loja ou espera vencer</div></div>
+      </div>
+    </div>
+    <div class="note good"><b>Pra deixar 100% claro:</b> no marketing pode escrever "upgrade". Por baixo, é sempre compra nova com brinde. A pessoa sente que subiu de plano; o sistema entende como compra. É esse truque que faz caber no prazo.</div>
+
+    <h3>Gestão de assinatura</h3>
+    <p class="sub">A cobrança acontece fora do app, e as lojas não deixam mexer em pagamento por dentro. Então trocar de plano e cancelar acontece no site. O app só tem o botão que leva pra lá.</p>
+    <div class="grid g2">
+      <div class="card"><h4>Dentro do app</h4><p>Tela "Minha assinatura": plano, período, próxima cobrança e onde a pessoa assinou. Botão "Gerenciar" que leva pra fora. O cancelamento em si não é feito aqui.</p></div>
+      <div class="card"><h4>No site (fora do app)</h4><p>É onde tudo acontece de verdade: comprar, trocar de plano, cancelar e gerenciar. Pela Stripe/Woovi, no navegador.</p></div>
+    </div>
+    <div class="note good"><b>Decisão do Gui (30/06):</b> a gente NÃO constrói tela própria de gerenciar assinatura. Ela já vem pronta com o provedor de pagamento. O app só direciona pra lá. Estratégia de segurar cliente dentro do app não faz sentido, porque isso já existe no provedor. <b>Task do Luis (pedido do Gustavo):</b> revisar o checkout e como a plataforma externa de pagamento está funcionando hoje.</div>
+    <h4 style="margin-top:14px">Duas situações, dois caminhos</h4>
+    <ul class="clean">
+      <li><b>Assinou pela Apple/Google (galera antiga):</b> gerencia e cancela na própria loja. O app leva direto pra lá. Tem "Restaurar compras" pra recuperar acesso.</li>
+      <li><b>Assinou pela Stripe/Woovi (galera nova):</b> gerencia no nosso site. Recupera acesso entrando na conta.</li>
+      <li>Por dentro, o sistema sabe de cada pessoa: onde assinou, plano, período, renovação. A tela só lê e mostra o caminho certo.</li>
+    </ul>
+
+    <h3>Telas que ainda faltam (o "depois de pagar")</h3>
+    <p class="sub"><b>Entenda o buraco:</b> todas as 14 telas que já temos servem pra <b>convencer a pessoa a pagar</b>. Mas quando ela paga e <b>volta pro app</b>, não tem nada preparado. É exatamente aí que um pagamento quebra na vida real: o Pix demora a confirmar, o cartão é recusado, a pessoa troca de celular, ou paga e o app continua Free. Estas telas cobrem esse "depois de pagar". Ordem de construção na guia Plano de entrega.</p>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Falta</th><th>Por quê</th><th>Quando</th></tr></thead>
+      <tbody>
+        <tr><td>"Bem-vindo ao Pro" (sucesso)</td><td>Sem isso a pessoa paga e não vê nada mudar.</td><td><span class="pill p-bad">V1</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+</section>
+
+<!-- ===== 04 REGRAS DAS LOJAS ===== -->
+<section class="panel" id="lojas">
+  <section class="blk">
+    <h2><span class="n">04</span>Regras das lojas (Apple + Google)</h2>
+    <p class="sub">Nosso app está na Apple e no Google. A regra principal delas: elas cobram comissão sobre a venda, não importa como a pessoa paga. Colocar Pix dentro do app no iPhone não livra a gente da comissão da Apple.</p>
+    <div class="note warn"><b>Apple e Google NÃO são iguais.</b> Cada loja tem regras diferentes. O que vale no iPhone não vale automaticamente no Android. Em especial, o pagamento externo (fora do app) que a gente já usa pode nem estar liberado no Android no Brasil ainda. Tratar cada loja separadamente, sem assumir que é igual.</div>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Onde cobra</th><th>Comissão</th><th>A gente desenha a tela de pagar?</th></tr></thead>
+      <tbody>
+        <tr><td>Site (navegador)</td><td><span class="pill p-good">0% + taxa do provedor</span></td><td>Sim, tudo</td></tr>
+        <tr><td>iPhone · pelo site</td><td><span class="pill p-warn">15%</span></td><td>Em parte (regras da Apple)</td></tr>
+        <tr><td>iPhone · pela Apple</td><td><span class="pill p-bad">26%</span></td><td>Não (tela da Apple)</td></tr>
+        <tr><td>Android · alternativo</td><td><span class="pill p-warn">~10–15%</span></td><td>Pouco (tela do Google)</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Como vender no iPhone (decisão A)</h3>
+    <p class="hint"><span class="dot"></span>Clique numa linha pra marcar a escolha. A real: pra vender por dentro do app no iPhone, a Apple obriga a botar o pagamento dela do lado. Fugir disso só num formato que não vende nada por dentro do app.</p>
+    <div class="fc" style="margin:10px 0">
+      <div class="fc-step dia"><div class="s-t">Quero vender dentro do app no iPhone?</div></div>
+      <div class="fc-conn">↓</div>
+      <div class="fc-branch">
+        <div class="fc-lane"><div class="lane-h">Não</div><div class="fc-step">"Só leitura": não vende nem menciona no app. 0% de comissão, mas pior conversão.</div></div>
+        <div class="fc-lane"><div class="lane-h">Sim → Apple obriga o pagamento dela junto</div><div class="fc-step hl">Pagamento da Apple + botão pro site lado a lado. 15% pelo site. Melhor conversão.</div><div class="fc-step">Só pela Apple. 26%. Menos controle.</div></div>
+      </div>
+    </div>
+    <div class="scroll">
+    <table data-decision="ios">
+      <thead><tr><th>Opção</th><th>Vende no app?</th><th>Comissão</th><th>Complexidade</th><th>Conversão</th></tr></thead>
+      <tbody>
+        <tr><td>Apple + site lado a lado</td><td><span class="pill p-good">Sim</span></td><td>15% site / 26% Apple</td><td><span class="pill p-bad">Alta</span></td><td><span class="pill p-good">Melhor</span></td></tr>
+        <tr><td>Só leitura (site)</td><td><span class="pill p-bad">Não</span></td><td><span class="pill p-good">0%</span></td><td><span class="pill p-good">Baixa</span></td><td><span class="pill p-bad">Pior</span></td></tr>
+        <tr><td>Só pela Apple</td><td><span class="pill p-good">Sim</span></td><td><span class="pill p-bad">26%</span></td><td><span class="pill p-warn">Média</span></td><td>Boa</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Base que já paga nas lojas (decisão B)</h3>
+    <p class="hint"><span class="dot"></span>Tem uma base antiga com assinatura recorrente na Apple e no Google (de antes). Ninguém assina novo por lá hoje. A gente não cancela essas assinaturas; só a pessoa ou a loja.</p>
+    <div class="scroll">
+    <table data-decision="legado">
+      <thead><tr><th>Opção</th><th>Complexidade</th><th>Risco de cobrar 2x</th><th>Incômodo pro usuário</th></tr></thead>
+      <tbody>
+        <tr><td>Deixar como está (rodar até vencer)</td><td><span class="pill p-good">Baixa</span></td><td><span class="pill p-good">Nenhum</span></td><td><span class="pill p-good">Nenhum</span></td></tr>
+        <tr><td>Forçar migração pro site</td><td><span class="pill p-bad">Alta</span></td><td><span class="pill p-bad">Real</span></td><td><span class="pill p-bad">Alto</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Android (decisão C)</h3>
+    <div class="note warn"><b>Falta confirmar um detalhe:</b> mandar pagar fora do app pode ainda não estar liberado no Brasil (o programa começou na Europa). O que existe hoje é uma tela de escolha, mas quem monta é o próprio Google. O Gui precisa confirmar no painel do Google. Android e iPhone têm regras diferentes, não dá pra assumir que é igual.</div>
+
+    <h3>Regras da Apple que mexem no nosso design (iPhone)</h3>
+    <ul class="clean">
+      <li>O pagamento da Apple tem que aparecer do lado do nosso link, do mesmo tamanho ou maior. Sem botão só de "Assinar via Pix".</li>
+      <li>O botão que leva pra fora tem que ser sem graça de propósito: só texto e uma setinha, sem cor e sem caixa. Enfeitou, reprova.</li>
+      <li>Antes de abrir o navegador, aparece um aviso da Apple. Essa tela é dela, a gente não desenha nem pula.</li>
+      <li>Tem que abrir o Safari de verdade, nunca um navegador escondido no app.</li>
+      <li>Vale só pra loja do Brasil. No resto do mundo, regra antiga.</li>
+      <li>Precisa ter "Restaurar compras" pra quem pagou pela Apple.</li>
+      <li>Dá pra avisar que o site é mais barato, mas só com os textos prontos que a Apple permite.</li>
+    </ul>
+    <div class="note bad"><b>Risco de agora:</b> hoje o app já manda pagar fora, mas de um jeito informal. Sem seguir o caminho oficial, é irregular. O perigo não é a Apple derrubar o app do nada. É ela recusar a nova versão quando a gente for subir. Pra evitar: aceitar o contrato da Apple até 06/07 e deixar tudo nas regras antes de enviar.</div>
+
+    <h3>As regras que não podem ser quebradas (resumo do jurídico)</h3>
+    <div class="grid g3">
+      <div class="card"><h4>Lojas</h4><p>Caminho oficial da Apple pro pagamento externo. Pagamento da Apple do lado. Botão sem graça. Aviso da Apple. Safari real. Restaurar compras.</p></div>
+      <div class="card"><h4>Consumidor (CDC)</h4><p>Nunca mostrar como parcelas (é cobrado uma vez). Preço verdadeiro. Cancelamento fácil. Devolução em 7 dias na compra online.</p></div>
+      <div class="card"><h4>Dados / saúde</h4><p>IA é só apoio, não decide (aviso visível). Nunca dizer IA "ilimitada". Dado de saúde não vaza pro contexto de cobrança.</p></div>
+    </div>
+  </section>
+</section>
+
+<!-- ===== 05 PLANO DE ENTREGA ===== -->
+<section class="panel" id="entrega">
+  <section class="blk">
+    <h2><span class="n">05</span>Plano de entrega</h2>
+    <p class="sub">O que entra na release, quem faz, quando fica pronto e o que ainda falta decidir.</p>
+
+    <h3>Cronograma</h3>
+    <div class="tl">
+      <div class="ev"><div class="d">Sprint 11 · 30/06–05/07</div><div class="t">Home, feedback, anotações, começo de PCR/AVC</div></div>
+      <div class="ev"><div class="d">Sprint 12 · 06/07–12/07</div><div class="t">PCR/AVC, planos, pediatria, onboarding</div></div>
+      <div class="ev red"><div class="d">15/07</div><div class="t"><b>Prazo que o Gustavo pediu</b> (o Luis considera inviável)</div></div>
+      <div class="ev"><div class="d">Sprint 13 · 13/07–19/07</div><div class="t"><b>Alvo: app pronto pra teste (~18/07)</b>, fora o pagamento</div></div>
+      <div class="ev"><div class="d">19/07–25/07</div><div class="t">Semana só do <b>pagamento</b> (com o dev novo)</div></div>
+      <div class="ev"><div class="d">Início de agosto</div><div class="t">Testado, pra loja (se os testes forem rápidos)</div></div>
+    </div>
+    <div class="note bad"><b>O gargalo:</b> ninguém do time atual tem folga pra pegar o pagamento. Validando o escopo, vamos precisar de <b>2 devs dedicados: um de front e um de back de pagamentos</b>, contratados sem demora. Sem eles, o pagamento atrasa o lançamento inteiro.</div>
+
+    <h3>Quem faz o quê</h3>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Pessoa</th><th>Frente</th></tr></thead>
+      <tbody>
+        <tr><td>Gui</td><td>Central de Urgência (PCR, AVC), CID, Home V2</td></tr>
+        <tr><td>Ariel</td><td>Web inteiro, backend da Home, checklist</td></tr>
+        <tr><td>Mabel</td><td>Telas menores: anotações, feedback, pediatria, perfil, planos</td></tr>
+        <tr><td>Peres</td><td>IA</td></tr>
+        <tr><td>Sérgio</td><td>Pagamento atual (testes) + login único (ALF)</td></tr>
+        <tr><td>Bertagna</td><td>Admin</td></tr>
+        <tr><td><b>2 devs novos</b></td><td><b>Pagamento, dedicados (a contratar): 1 de front + 1 de back de pagamentos</b></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Ordem pra construir o pagamento (do conselho)</h3>
+    <p class="sub">Prioriza fazer o pagamento funcionar de ponta a ponta, não só as telas de venda.</p>
+    <ul class="clean">
+      <li><b>Base:</b> Tela de Planos + confirmação antes de pagar.</li>
+      <li><b>Caminho do dinheiro:</b> rota do iPhone (regras Apple) + "Bem-vindo ao Pro" + "confirmando Pix" + restaurar compras.</li>
+      <li><b>Identidade:</b> "Minha assinatura" + "você já é assinante" + login/recuperar acesso.</li>
+      <li><b>Erros de cobrança:</b> cartão recusado + cobrança falhou (aviso simples).</li>
+      <li><b>Venda:</b> os paywalls (contextual, boas-vindas, degustação, limite IA, upgrade).</li>
+      <li><b>Depois:</b> rebaixar plano, cobrança em atraso completa, "assine antes do aumento", migração da base.</li>
+    </ul>
+
+    <h3>Cortado da release (vira "em breve")</h3>
+    <ul class="clean">
+      <li>Central de Urgência: só PCR e AVC agora. Sepse, SCA e CAD viram "em breve".</li>
+      <li>Condutas (muito grande). Parcelamento. Login com Google (removido).</li>
+      <li>Gustavo não gosta de "entrega parcial" — ainda em negociação.</li>
+    </ul>
+
+    <h3>Decisões fechadas</h3>
+    <ul class="clean done">
+      <li>Três planos: Free / Pro / Black. Preços 01/07: Pro 27,90 anual · 34,90 mensal · Black 44,90 só anual.</li>
+      <li>Anual à vista, sem parcelar. Valor do ano só no checkout, nunca como parcelas.</li>
+      <li>Sem cupom, sem contagem regressiva. Narrativa "meses grátis".</li>
+      <li>Cobrança fora do app (Stripe/Woovi). "Upgrade" por tempo de bônus.</li>
+      <li>Gestão de assinatura: app só direciona pro provedor externo.</li>
+      <li>PCR no Free. Pro é o alvo, Black ancora. IA do Black: "mais tokens", nunca "ilimitada".</li>
+    </ul>
+
+    <h3>Falta decidir (com dono)</h3>
+    <ul class="clean check">
+      <li><b>Valor final do Black</b> (538,80?) e preço pós-lançamento. — Gustavo</li>
+      <li><b>Lista de calculadoras Free vs Pro</b> e alocação do eletro. — Gustavo</li>
+      <li><b>Deixar a base antiga como está?</b> — Gustavo + Gui</li>
+      <li><b>Android:</b> pagar fora do app está liberado no Brasil? — Gui</li>
+      <li><b>Contrato Apple</b> até 06/07 e faturamento abaixo de US$1M. — eng/Gustavo</li>
+      <li><b>Contratar 2 devs</b> dedicados ao pagamento: 1 de front + 1 de back de pagamentos. — Gustavo + Souza</li>
+      <li><b>Revisar o checkout e como está a plataforma externa de pagamento hoje</b> (pedido do Gustavo). — Luis</li>
+      <li><b>Doc do que é Free vs pago</b> (incl. se o Free tem IA). Trava a copy de conteúdo dos paywalls. — Luis (vai mandar)</li>
+      <li><b>Trial de tempo</b> (ex: 7 dias grátis) — ideia do Gustavo, depende de validação com dev. — Gustavo + dev</li>
+      <li><b>"Assine antes do aumento"</b> vira feature? — Gustavo</li>
+      <li><b>Atualizar a copy dos paywalls</b> pro modelo Free/Pro/Black. — Luis</li>
+    </ul>
+    <div class="toolbar"><button class="btn" id="reset">Limpar decisões marcadas</button></div>
+
+    <h3>Atas das calls</h3>
+    <details><summary>Alinhamento Planos — 26/06 (Luis × Gustavo)</summary>
+      <div class="det-body"><ul class="clean">
+        <li>Estrutura Free/Pro/Black. Pro = alvo, Black = âncora. PCR liberado no Free.</li>
+        <li>Preços da call (antigos, 32,90/297,90 Pro, ~449,90 Black) substituídos pela decisão de 01/07.</li>
+        <li>Ancorar no "por mês", toggle anual-first, badge "Popular" no Pro.</li>
+        <li>Migração da base ativa = campanha separada (assinar antes de vencer, com desconto).</li>
+      </ul></div>
+    </details>
+    <details><summary>Reunião 30/06 17:55 (Luis × Gui) — congelamento & pagamento</summary>
+      <div class="det-body"><ul class="clean">
+        <li>Pagamento é a maior frente; precisa de dev dedicado. Semana 19–25/07 só de pagamento.</li>
+        <li>Gestão de assinatura vai pro externo (lojas travam pagamento dentro do app). App só direciona.</li>
+        <li>Central de Urgência: só PCR/AVC; Sepse/SCA/CAD e Condutas viram "em breve". Login Google removido.</li>
+      </ul></div>
+    </details>
+    <details><summary>Alinhamento Release 30/06 21:09 (Luis × Gustavo)</summary>
+      <div class="det-body"><ul class="clean">
+        <li>Parcelamento fora da V1 (anual é cobrado uma vez). Whitebook (concorrente) também não parcela.</li>
+        <li>Regras de troca: mensal→anual e plano atual→plano novo com desconto.</li>
+        <li>Prazo-pressão dia 15. Gustavo não gosta de "em breve"; quer algo estável e completo.</li>
+      </ul></div>
+    </details>
+    <details><summary>Congelamento de Escopo — CalcMed 2.0</summary>
+      <div class="det-body"><p>Rascunho aguardando aprovação. "Conta e monetização": planos no app, compra/cancelamento/gestão no web via Stripe (limitação das lojas). Próximas versões (fora do escopo): IA multimodal, protocolos novos, pediatria (dengue/asma), receitas web, Google Agenda, teste A/B.</p></div>
+    </details>
+  </section>
+</section>
+
+</main>
+
+<footer><div class="wrap">
+  CalcMed · Central de Pagamento e Planos · documento de trabalho. Fundamentação: <code>apps/web/docs/pagamento-in-app-limitacoes-decisoes.md</code>, <code>prd-pagamento.md</code>, <code>planos-pricing.md</code> · paywalls em <code>CalcMed Urgencia/tasks/modais/</code>.
+</div></footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Tabs
+  var tabs=document.querySelectorAll('.tab'), panels=document.querySelectorAll('.panel');
+  function show(id){ panels.forEach(function(p){p.classList.toggle('active',p.id===id)}); tabs.forEach(function(t){t.classList.toggle('active',t.getAttribute('data-p')===id)});
+    try{localStorage.setItem('cm-pg-tab',id)}catch(e){} window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}); }
+  tabs.forEach(function(t){t.addEventListener('click',function(){show(t.getAttribute('data-p'))})});
+  try{var lt=localStorage.getItem('cm-pg-tab'); if(lt&&document.getElementById(lt))show(lt);}catch(e){}
+
+  // Billing toggle (single source of truth)
+  var PRICES={
+    pro:{ mensal:{main:'R$ 34,90',cad:'/mês',cadshort:'/mês',full:''},
+          anual:{main:'R$ 27,90',cad:'/mês, cobrado anualmente',cadshort:'/mês',full:'R$ 334,80/ano'} },
+    black:{ mensal:{main:'R$ 44,90',cad:'só no plano anual',cadshort:'',full:''},
+            anual:{main:'R$ 44,90',cad:'/mês, cobrado anualmente',cadshort:'/mês',full:'R$ 538,80/ano'} }
+  };
+  var billing='anual';
+  function applyBilling(){
+    document.querySelectorAll('[data-price]').forEach(function(el){
+      var plan=el.getAttribute('data-price'), field=el.getAttribute('data-field');
+      var v=PRICES[plan] && PRICES[plan][billing] ? PRICES[plan][billing][field] : undefined;
+      if(v===undefined) return;
+      if(field==='full'){ el.textContent=v; el.style.display = v? '' : 'none'; }
+      else el.textContent=v;
+    });
+    document.querySelectorAll('[data-billing-toggle]').forEach(function(seg){
+      seg.querySelectorAll('.seg__btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-bill')===billing); });
+    });
+    try{localStorage.setItem('cm-pg-bill',billing)}catch(e){}
+  }
+  document.querySelectorAll('[data-billing-toggle] .seg__btn').forEach(function(b){
+    b.addEventListener('click',function(){ billing=b.getAttribute('data-bill'); applyBilling(); });
+  });
+  try{var lb=localStorage.getItem('cm-pg-bill'); if(lb)billing=lb;}catch(e){}
+  applyBilling();
+
+  // Selectable decisions
+  var KEY='cm-pg-dec', saved={}; try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+  document.querySelectorAll('table[data-decision]').forEach(function(t){
+    var id=t.getAttribute('data-decision'), rows=t.querySelectorAll('tbody tr');
+    rows.forEach(function(row,idx){
+      if(saved[id]===idx) row.classList.add('chosen');
+      row.addEventListener('click',function(){
+        var already=row.classList.contains('chosen');
+        rows.forEach(function(r){r.classList.remove('chosen')});
+        if(already){delete saved[id]} else {row.classList.add('chosen'); saved[id]=idx;}
+        try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}
+      });
+    });
+  });
+  var rst=document.getElementById('reset');
+  if(rst) rst.addEventListener('click',function(){ saved={}; try{localStorage.removeItem(KEY)}catch(e){}
+    document.querySelectorAll('table[data-decision] tbody tr.chosen').forEach(function(r){r.classList.remove('chosen')}); });
+})();
+</script>
+</body>
+</html>

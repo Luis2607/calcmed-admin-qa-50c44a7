@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitetura da Informação · App Adulto — CalcMed</title>
+<style>
+:root{--navy:#0e2a47;--navy2:#16395f;--teal:#1f9e8f;--teal-d:#147c70;--line:#dde5ee;--bg:#f4f7fb;--mut:#5b6b7a;--ink:#13212e}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{flex-shrink:0;background:var(--navy);color:#fff;padding:13px 20px;display:flex;align-items:center;gap:11px}
+header .logo{width:26px;height:26px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700}
+header b{font-size:15px;font-weight:700}header span{font-size:12px;color:#9ec7ff;margin-left:2px}
+.toolbar{flex-shrink:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 20px;background:#fff;border-bottom:0.5px solid var(--line)}
+.bar{flex:1;min-width:140px;height:8px;border-radius:6px;background:#eef3f8;border:0.5px solid var(--line);overflow:hidden}
+.bar>div{height:100%;width:0;background:var(--teal);transition:width .25s}
+.cnt{font-size:12.5px;color:var(--mut);min-width:120px;text-align:right;font-feature-settings:'tnum'}
+button{font-size:12.5px;padding:5px 11px;border:0.5px solid var(--line);border-radius:8px;background:#fff;color:var(--navy);cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{background:#eef3f8;border-color:#c5d2e0}
+.legend{flex-shrink:0;display:flex;gap:14px;flex-wrap:wrap;padding:9px 20px;background:#fff;border-bottom:0.5px solid var(--line);font-size:11.5px;color:var(--mut)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+#cy{flex:1;min-height:0}
+.hint{flex-shrink:0;padding:8px 20px;font-size:11.5px;color:#8090a0;background:#fff;border-top:0.5px solid var(--line)}
+.hint b{color:var(--teal-d)}
+</style></head><body>
+<header><span class="logo">+</span><b>Arquitetura da Informação</b><span>· App Adulto / normal (as-is do app atual)</span></header>
+<div class="toolbar">
+  <div class="bar"><div id="bar"></div></div>
+  <span class="cnt" id="cnt">0 / 0 checados</span>
+  <button id="dir">↔ / ↕ direção</button>
+  <button id="fit">Ajustar</button>
+  <button id="clr">Limpar checks</button>
+</div>
+<div class="legend">
+  <span><i style="background:#16395f"></i>Estrutura</span>
+  <span><i style="background:#1d9e75"></i>Livre no free</span>
+  <span><i style="background:#6f8398"></i>Premium</span>
+  <span><i style="background:#d85a30"></i>Urgência</span>
+  <span><i style="background:#378add"></i>Ferramenta</span>
+  <span><i style="background:#ba7517"></i>Flag / dívida</span>
+</div>
+<div id="cy"></div>
+<div class="hint"><b>Clique num nó para marcar/desmarcar</b> (acompanhamento) · scroll = zoom · arraste pra mover · ↔/↕ troca direção · o progresso fica salvo neste navegador</div>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<script>
+(function(){
+  if(!window.cytoscape){document.getElementById('cy').innerHTML='<p style="padding:24px;color:#5b6b7a">Não foi possível carregar a biblioteca do mapa (verifique a conexão).</p>';return;}
+  try{ if(window.cytoscapeDagre) cytoscape.use(window.cytoscapeDagre); }catch(e){}
+  var C={est:'#16395f',root:'#0e2a47',free:'#1d9e75',prem:'#6f8398',urg:'#d85a30',tool:'#378add',flag:'#ba7517'};
+  var N=[
+    ['root','App CalcMed','root'],['auth','Auth / Onboarding','est'],['shell','Shell / Navegação','est'],['home','Home Adulto','est'],
+    ['auth_login','Login','est'],['auth_reg','Cadastro + Termos','est'],['auth_recover','Recuperar senha','est'],['auth_splash','Splash / Update','est'],['auth_onb','Onboarding + Quiz','est'],
+    ['shell_drawer','Drawer / Sidebar','est'],['shell_search','Busca global','free'],['shell_set','Configurações','est'],['shell_ref','Referências','free'],['shell_eletro','Cross-link Eletro','est'],['shell_pediatra','Ir p/ Pediatra','est'],
+    ['urg','Urgências','urg'],['urg_cad','Cetoacidose (8 abas)','prem'],['urg_hiper','Hiperglicemia','prem'],['urg_hipo','Hipoglicemia','free'],['urg_enx','Enxaqueca','free'],['urg_tromb','Trombólise','prem'],['urg_cirrose','Cirrose','prem'],['urg_ira','Injúria Renal KDIGO','tool'],['urg_conv','Crise Convulsiva','prem'],['urg_acidobase','Distúrbios Ácido-Base','flag'],['urg_arr','Arritmias (4)','prem'],['urg_tox','Antídotos (2)','prem'],
+    ['disturbios','Distúrbios Hidroelet.','tool'],['dist_eletro','Eletrólitos (4)','prem'],['dist_corr','Correções (Na/Ca)','tool'],['dist_hipoca','Hipocalcemia','prem'],
+    ['calc','Calculadoras Médicas','tool'],['calc_geral','Saúde Geral (4)','free'],['calc_renal','Clearance/Estadiam.','tool'],['calc_qtc','Intervalo QTc','tool'],['calc_anion','Ânion Gap / Osmol.','tool'],['calc_vm','Ventilação Mec. (4)','tool'],['calc_inf','Taxa de Infusão','free'],
+    ['escores','Escores (motor)','prem'],['escores_pps','Escala PPS','tool'],['escores_dd','Escores data-driven','tool'],
+    ['dilui','Diluições e Doses','prem'],['dva','Drogas Vasoativas (10)','prem'],['dilui_sol','Soluções Padroniz.','prem'],['dilui_my','Soluções Personaliz.','prem'],['dilui_antiarr','Antiarrítmicos (3)','prem'],['dilui_anticoag','Anticoagulantes','prem'],['conv','Conversores (7)','free'],
+    ['atb','Antibióticos Hosp.','prem'],['atb_renal','Ajuste renal (~30)','prem'],['atb_ref','Dose fixa / tabela','prem'],
+    ['plantao','Plantão / Ferramentas','est'],['pacemeter','Passômetro','prem'],['escala','Escala / Plantões','free'],['divrest','Dividir Descanso','free'],['notepad','Anotações / Pacientes','prem'],
+    ['gamif','Gamificação','free'],['quiz','Quiz (18 categorias)','free'],['ranking','Ranking (3 abas)','free'],['conquistas','Conquistas / Tiers','free'],['vantagens','Vantagens / Moedas','free'],
+    ['money','Monetização / Conta','prem'],['paywall','Paywall / Upsell','prem'],['sub','Assinatura (planos)','prem'],['store','Loja / Checkout','prem'],['gift','Indique amigo','free'],['profile','Perfil / Conta','est'],['support','Suporte / FAQ','est']
+  ];
+  var E=[['root','auth'],['root','shell'],['root','home'],
+    ['auth','auth_login'],['auth','auth_reg'],['auth','auth_recover'],['auth','auth_splash'],['auth','auth_onb'],
+    ['shell','shell_drawer'],['shell','shell_search'],['shell','shell_set'],['shell','shell_ref'],['shell','shell_eletro'],['shell','shell_pediatra'],
+    ['home','urg'],['home','disturbios'],['home','calc'],['home','escores'],['home','dilui'],['home','atb'],['home','plantao'],['home','gamif'],['home','money'],
+    ['urg','urg_cad'],['urg','urg_hiper'],['urg','urg_hipo'],['urg','urg_enx'],['urg','urg_tromb'],['urg','urg_cirrose'],['urg','urg_ira'],['urg','urg_conv'],['urg','urg_acidobase'],['urg','urg_arr'],['urg','urg_tox'],
+    ['disturbios','dist_eletro'],['disturbios','dist_corr'],['disturbios','dist_hipoca'],
+    ['calc','calc_geral'],['calc','calc_renal'],['calc','calc_qtc'],['calc','calc_anion'],['calc','calc_vm'],['calc','calc_inf'],
+    ['escores','escores_pps'],['escores','escores_dd'],
+    ['dilui','dva'],['dilui','dilui_sol'],['dilui','dilui_my'],['dilui','dilui_antiarr'],['dilui','dilui_anticoag'],['dilui','conv'],
+    ['atb','atb_renal'],['atb','atb_ref'],
+    ['plantao','pacemeter'],['plantao','escala'],['plantao','divrest'],['plantao','notepad'],
+    ['gamif','quiz'],['gamif','ranking'],['gamif','conquistas'],['gamif','vantagens'],
+    ['money','paywall'],['money','sub'],['money','store'],['money','gift'],['money','profile'],['money','support']];
+  var STORAGE_KEY='calcmed_ia_adulto_chk', ROOT_ID='root';
+  var els=N.map(function(n){return {data:{id:n[0],base:n[1],label:n[1],c:C[n[2]]}};})
+    .concat(E.map(function(e){return {data:{id:e[0]+'_'+e[1],source:e[0],target:e[1]}};}));
+  var dir='LR';
+  function lay(){return {name:(window.cytoscapeDagre?'dagre':'breadthfirst'),rankDir:dir,directed:true,nodeSep:13,rankSep:64,edgeSep:6,animate:true,animationDuration:450,fit:true,padding:20};}
+  var cy=cytoscape({container:document.getElementById('cy'),elements:els,
+    style:[
+      {selector:'node',style:{'background-color':'data(c)','label':'data(label)','color':'#fff','font-size':'10px','font-weight':600,'text-valign':'center','text-halign':'center','text-wrap':'wrap','text-max-width':'108px','width':'label','height':'label','padding':'9px','shape':'round-rectangle','border-width':0}},
+      {selector:'node[id = "root"]',style:{'font-size':'13px','padding':'14px'}},
+      {selector:'node[c = "#16395f"]',style:{'font-size':'11px','padding':'11px'}},
+      {selector:'node.chk',style:{'border-width':4,'border-color':'#1d9e75','opacity':0.5}},
+      {selector:'edge',style:{'width':1.5,'line-color':'#aebfd0','target-arrow-color':'#aebfd0','target-arrow-shape':'triangle','curve-style':'taxi','taxi-direction':'rightward','taxi-turn':22,'arrow-scale':0.9}}
+    ],layout:lay(),wheelSensitivity:0.25,minZoom:0.2,maxZoom:2.6});
+  var saved=[];try{saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){}
+  var total=cy.nodes().length-1;
+  function setChk(n,on){if(on){n.addClass('chk');n.data('label','✓ '+n.data('base'));}else{n.removeClass('chk');n.data('label',n.data('base'));}}
+  function save(){var a=cy.nodes('.chk').map(function(x){return x.id();});try{localStorage.setItem(STORAGE_KEY,JSON.stringify(a));}catch(e){}}
+  function refresh(){var c=cy.nodes('.chk').length;document.getElementById('cnt').textContent=c+' / '+total+' checados';document.getElementById('bar').style.width=(total?Math.round(c/total*100):0)+'%';}
+  saved.forEach(function(id){var n=cy.getElementById(id);if(n&&n.length&&id!==ROOT_ID)setChk(n,true);});refresh();
+  cy.on('tap','node',function(ev){var n=ev.target;if(n.id()===ROOT_ID)return;setChk(n,!n.hasClass('chk'));save();refresh();});
+  document.getElementById('fit').onclick=function(){cy.animate({fit:{padding:20},duration:360});};
+  document.getElementById('dir').onclick=function(){dir=(dir==='LR'?'TB':'LR');cy.style().selector('edge').style('taxi-direction',dir==='LR'?'rightward':'downward').update();cy.layout(lay()).run();};
+  document.getElementById('clr').onclick=function(){if(!confirm('Limpar todos os checks deste mapa?'))return;cy.nodes('.chk').forEach(function(n){setChk(n,false);});save();refresh();};
+})();
+</script></body></html>

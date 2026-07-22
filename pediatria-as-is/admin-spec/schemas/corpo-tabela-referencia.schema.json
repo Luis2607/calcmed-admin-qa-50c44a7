@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-tabela-referencia.schema.json",
+  "title": "Corpo do molde T8 tabela-referencia (corpo.tabela)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'tabela-referencia'. Cards/linhas estaticos selecionados por cenario/faixa, SEM calculo. Ex.: Antiarritmicos, Antidotos (Flumazenil/Naloxona), Solucoes Padronizadas, Anticoagulantes (eixo de decisao por ClCr), Parametros Iniciais de VM (por faixa etaria), Sinais Vitais Normais (hoje JPG). Fronteira editorial com T1-lookup (D2): T8 = card de referencia clinica; D2 = prescricao de uma droga. Fonte: 03-backend-json.md §2.8, 01-sistema-de-tipos §2 T8.",
+  "x-status": "[PROPOSTA]",
+  "type": "object",
+  "required": ["indexar_por", "linhas"],
+  "properties": {
+    "indexar_por": { "enum": ["cenario", "faixa_etaria", "clcr"] },
+    "linhas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "chave": { "type": "string", "description": "Cenario/faixa que seleciona a linha." },
+          "apresentacao": { "type": "string" },
+          "dose_usual": { "type": "string" },
+          "prescricao": { "type": "string" },
+          "cuidados": { "type": "string" }
+        }
+      }
+    },
+    "eixo_decisao": {
+      "type": ["object", "null"],
+      "description": "Opcional (ex.: Anticoagulantes por ClCr)."
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-protocolo.schema.json",
+  "title": "Corpo do molde T5 protocolo-multi-step (corpo.protocolo)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'protocolo-multi-step'. Abas/steps sequenciais; cada aba referencia outro molde (composicao RECURSIVA: texto, T1 dose-por-peso, T6 arvore, T2 calc). Ex.: CAD (8 abas), Trombolise (3), Intubacao (steps 1-5), PCR (5 abas), Diarreia (Planos A/B/C). input_global injetado nas abas que o consomem (peso da Trombolise). Migrar os protocolos hardcoded e fase 2+ (PLANO §4). Fonte: 03-backend-json.md §2.5, 01-sistema-de-tipos §2 T5.",
+  "x-status": "[PROPOSTA — hoje hardcode no binario]",
+  "type": "object",
+  "required": ["abas"],
+  "properties": {
+    "abas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "titulo", "conteudo"],
+        "properties": {
+          "id": { "type": "string" },
+          "titulo": { "type": "string" },
+          "conteudo": {
+            "type": "object",
+            "description": "REFERENCIA a outro molde: { tipo, ref|corpo }. `ref` = id de um item existente; `corpo` = sub-corpo inline. Composicao recursiva.",
+            "required": ["tipo"],
+            "properties": {
+              "tipo": { "enum": ["texto", "droga-dose", "conduta-arvore-decisao", "calculadora-formula"] },
+              "ref": { "type": "string", "description": "id de outro item de conteudo." },
+              "corpo": { "type": "object", "description": "Sub-corpo inline (valida contra o schema do `tipo`)." },
+              "texto": { "type": "string", "description": "Conteudo quando tipo=texto." }
+            }
+          }
+        }
+      }
+    },
+    "input_global": {
+      "type": ["object", "null"],
+      "description": "ex.: peso compartilhado entre abas (Trombolise). Injetado em todas as abas que o consomem."
+    },
+    "cross_links": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ex.: CAD aba 7 -> Anion Gap."
+    }
+  }
+}

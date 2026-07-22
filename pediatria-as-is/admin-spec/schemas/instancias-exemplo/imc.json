@@ -1,0 +1,47 @@
+{
+  "id": "imc",
+  "tipo": "calculadora-formula",
+  "nome": "IMC (Indice de Massa Corporal)",
+  "classe": "Calculadoras",
+  "publico": "ambos",
+  "statusEditorial": "publicado",
+  "revisaoMedicaStatus": "aprovado",
+  "observacoes": "Adultos. Para gestantes e criancas usar curvas especificas.",
+  "referencias": "OMS / Diretriz Brasileira de Obesidade",
+  "tagsRisco": [],
+  "ferramentasSimilares": ["peso-ideal", "superficie-corporal"],
+  "slots": {
+    "peso": true,
+    "definirDose": false,
+    "dialise": false,
+    "regime": false,
+    "clearance": false,
+    "cockcroft": false,
+    "observacoes": true,
+    "referencias": true,
+    "copiarCompartilhar": true,
+    "ferramentasSimilares": true
+  },
+  "ordemBlocos": ["inputs", "formulas", "faixas_classificacao", "observacoes", "referencias"],
+  "schemaVersion": 1,
+  "corpo": {
+    "inputs": [
+      { "id": "peso", "label": "Peso", "unidade": "kg", "validacao": { "min": 1, "max": 400, "msg": "Peso fora do intervalo plausivel." } },
+      { "id": "altura", "label": "Altura", "unidade": "cm", "validacao": { "min": 30, "max": 250, "msg": "Altura fora do intervalo plausivel." } }
+    ],
+    "formulas": [
+      { "id": "imc", "label": "IMC", "expr": "peso * 10000 / (altura * altura)", "casas": 1 }
+    ],
+    "faixas_classificacao": [
+      { "condicao": "imc < 18.5", "rotulo": "Baixo peso", "texto": "Abaixo do peso recomendado." },
+      { "condicao": "imc >= 18.5 && imc < 24.9", "rotulo": "Eutrofico", "texto": "Peso adequado." },
+      { "condicao": "imc >= 24.9 && imc < 30", "rotulo": "Sobrepeso", "texto": "Acima do peso." },
+      { "condicao": "imc >= 30 && imc < 35", "rotulo": "Obesidade Grau I", "texto": "Obesidade grau I." },
+      { "condicao": "imc >= 35 && imc < 40", "rotulo": "Obesidade Grau II", "texto": "Obesidade grau II." },
+      { "condicao": "imc >= 40", "rotulo": "Obesidade Grau III", "texto": "Obesidade grau III (morbida)." }
+    ],
+    "notas": [
+      "Altura em centimetros (fator 10000), conforme o binario do app (NAO a convencao peso/(altura_m)^2)."
+    ]
+  }
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcMed Pediatria — Mapa da Arquitetura da Informação (as-is 2026-06-20)</title>
+<style>
+  :root{
+    --navy:#0e2a47; --navy2:#16395f; --teal:#1f9e8f; --teal-d:#147c70;
+    --red:#d23b3b; --amber:#e0a008; --ink:#11202e; --mut:#5b6b7a;
+    --line:#dfe6ee; --bg:#f3f6fa; --card:#ffffff; --chip:#eef3f8;
+    --free:#1f9e8f; --prem:#c98a00; --orphan:#d23b3b; --calc:#3b6fd2; --proto:#8b46c9;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45;padding:28px 22px 60px}
+  .wrap{max-width:1320px;margin:0 auto}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 22px;border-bottom:3px solid var(--navy);padding-bottom:16px;margin-bottom:8px}
+  h1{font-size:24px;margin:0;color:var(--navy);letter-spacing:-.3px}
+  h1 .em{color:var(--teal)}
+  .sub{color:var(--mut);font-size:13px;margin-top:3px}
+  .stats{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
+  .stat{background:var(--navy);color:#fff;border-radius:10px;padding:8px 13px;text-align:center;min-width:74px}
+  .stat b{display:block;font-size:19px;line-height:1.1}
+  .stat span{font-size:10.5px;opacity:.82;text-transform:uppercase;letter-spacing:.4px}
+  .stat.ok{background:var(--teal)}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:16px 0 22px;font-size:12.5px;color:var(--mut);align-items:center}
+  .lg{display:inline-flex;align-items:center;gap:6px}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .pill{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;color:#fff;vertical-align:middle}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;align-items:start}
+  .block{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(16,40,60,.05)}
+  .block > h2{margin:0;font-size:14px;padding:12px 15px;background:linear-gradient(180deg,var(--navy),var(--navy2));color:#fff;
+    display:flex;align-items:center;gap:9px;letter-spacing:.2px}
+  .block > h2 .n{margin-left:auto;background:rgba(255,255,255,.16);border-radius:20px;font-size:11px;padding:2px 9px;font-weight:600}
+  .block .body{padding:11px 13px 14px}
+  .cat{margin:9px 0 0}
+  .cat:first-child{margin-top:2px}
+  .cat .ch{font-size:12px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px;margin-bottom:5px}
+  .cat .meta{font-weight:500;color:var(--mut);font-size:11px}
+  .items{display:flex;flex-wrap:wrap;gap:5px}
+  .it{font-size:11.5px;background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:3px 8px;color:var(--ink);white-space:nowrap}
+  .it.free{border-color:#bfe5df;background:#eafaf7}
+  .it.orphan{border-color:#f3c6c6;background:#fdeeee;color:var(--red)}
+  .it .b{font-weight:700}
+  .tag{font-size:9.5px;font-weight:700;padding:0 5px;border-radius:5px;margin-left:4px;vertical-align:middle}
+  .tag.calc{background:#e6eefb;color:var(--calc)} .tag.proto{background:#f1e7fb;color:var(--proto)}
+  .tag.solo{background:#eef1f4;color:var(--mut)}
+  .note{font-size:11px;color:var(--mut);margin-top:8px;border-top:1px dashed var(--line);padding-top:7px}
+  .access{font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px}
+  .access.free{background:#eafaf7;color:var(--teal-d)} .access.prem{background:#fdf4e0;color:var(--prem)}
+  .access.mix{background:linear-gradient(90deg,#eafaf7 50%,#fdf4e0 50%);color:var(--navy)}
+  footer{margin-top:26px;font-size:11.5px;color:var(--mut);border-top:1px solid var(--line);padding-top:12px}
+  .flags{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:10px;padding:12px 15px;margin-top:18px}
+  .flags h3{margin:0 0 7px;font-size:13px;color:var(--navy)}
+  .flags li{font-size:12px;color:var(--ink);margin:3px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>CalcMed · <span class="em">Pediatria</span> — Arquitetura da Informação <span style="font-weight:400;color:#5b6b7a;font-size:15px">(as-is)</span></h1>
+      <div class="sub">Extraído do app de produção (bundle Flutter) · 2026-06-20 · onde cada tela realmente vive hoje</div>
+    </div>
+    <div class="stats">
+      <div class="stat ok"><b>100%</b><span>cobertura</span></div>
+      <div class="stat"><b>101</b><span>rotas</span></div>
+      <div class="stat"><b>11</b><span>blocos home</span></div>
+      <div class="stat"><b>~90</b><span>telas clínicas</span></div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span class="lg"><span class="dot" style="background:var(--free)"></span> livre no plano free</span>
+    <span class="lg"><span class="dot" style="background:var(--prem)"></span> Premium (gated)</span>
+    <span class="lg"><span class="dot" style="background:var(--orphan)"></span> órfão (no bundle, sem rota)</span>
+    <span class="lg"><span class="tag calc">🧮</span> calculadora</span>
+    <span class="lg"><span class="tag proto">🩺</span> protocolo/fluxo</span>
+    <span class="lg"><span class="tag solo">📄</span> tela única (acordeão)</span>
+  </div>
+
+  <div class="grid">
+
+    <!-- ACESSO -->
+    <div class="block">
+      <h2>① Acesso &amp; Header</h2>
+      <div class="body">
+        <div class="cat"><div class="ch">Entrada</div>
+          <div class="items"><span class="it">Sidebar → <span class="b">"Pediatria"</span> (rota própria <span class="b">/pediatra</span>)</span></div></div>
+        <div class="cat"><div class="ch">Header</div>
+          <div class="items"><span class="it">"Olá, {nome}"</span><span class="it">toggle visual Pediatria</span><span class="it">busca "O que você precisa hoje?"</span></div></div>
+        <div class="note">Não é estado salvo — é tela/rota separada. App não inicia em rota profunda (precisa bootar pela home).</div>
+      </div>
+    </div>
+
+    <!-- TOPO -->
+    <div class="block">
+      <h2>②③ Topo da Home</h2>
+      <div class="body">
+        <div class="cat"><div class="ch">Carrossel / Banners</div>
+          <div class="items"><span class="it">"Participe do Quiz"</span><span class="it">"Quando cada segundo importa… AGUARDE"</span></div></div>
+        <div class="cat"><div class="ch">Passômetro <span class="meta">(ferramenta)</span></div>
+          <div class="items"><span class="it">escala de plantões</span></div></div>
+        <div class="cat"><div class="ch">Busca</div>
+          <div class="items"><span class="it">"O que você precisa hoje?"</span></div></div>
+      </div>
+    </div>
+
+    <!-- SINTOMÁTICOS -->
+    <div class="block" style="grid-column:span 2">
+      <h2>④ Sintomáticos <span class="access prem">Premium</span> <span class="n">9 categorias · 39 itens</span></h2>
+      <div class="body">
+        <div class="cat"><div class="ch">Antitérmicos e Analgésicos <span class="meta">→ 01a</span></div>
+          <div class="items"><span class="it">Dipirona</span><span class="it">Paracetamol</span><span class="it">Ibuprofeno</span></div></div>
+        <div class="cat"><div class="ch">Anti-inflamatórios (aine) <span class="meta">→ 01a</span></div>
+          <div class="items"><span class="it">Cetoprofeno</span><span class="it">Nimesulida</span><span class="it">Ibuprofeno <span class="meta">(compart.)</span></span><span class="it orphan">Diclofenaco — órfão</span></div></div>
+        <div class="cat"><div class="ch">Antieméticos <span class="meta">→ 01a</span></div>
+          <div class="items"><span class="it">Bromoprida</span><span class="it">Metoclopramida <span class="meta">(só aviso)</span></span><span class="it">Ondansetrona</span><span class="it">Dimenidrato</span></div></div>
+        <div class="cat"><div class="ch">Antihistamínicos <span class="tag solo">📄</span> <span class="meta">→ 01b</span></div>
+          <div class="items"><span class="it">Cetirizina</span><span class="it">Dexclorfeniramina</span><span class="it">Desloratadina</span><span class="it">Fexofenadina</span><span class="it">Hidroxizina</span><span class="it">Loratadina</span><span class="it">Ebastina</span></div></div>
+        <div class="cat"><div class="ch">Antiespasmódico <span class="meta">→ 01b</span></div>
+          <div class="items"><span class="it">Escopolamina</span><span class="it">Simeticona</span><span class="it">Colidis®</span></div></div>
+        <div class="cat"><div class="ch">Antidiarreicos <span class="tag solo">📄</span> <span class="meta">→ 01b</span></div>
+          <div class="items"><span class="it orphan">Saccharomyces (Floratil®)</span><span class="it orphan">Zinco</span> <span class="meta" style="align-self:center">acordeão, sem rota própria</span></div></div>
+        <div class="cat"><div class="ch">Broncodilatadores <span class="meta">→ 01c</span></div>
+          <div class="items"><span class="it">Acebrofilina</span><span class="it">Abrilar®</span><span class="it">Fenoterol</span><span class="it">Brom. Ipratrópio</span><span class="it">Montelucaste</span><span class="it">Salbutamol</span><span class="it">Sulfato Mg</span><span class="it">Terbutalina</span></div></div>
+        <div class="cat"><div class="ch">Laxativos <span class="meta">→ 01d</span></div>
+          <div class="items"><span class="it">Lactulose</span><span class="it">Macrogol 3350</span><span class="it">Hidróxido Mg</span><span class="it">Óleo mineral</span><span class="it">Glicerina</span></div></div>
+        <div class="cat"><div class="ch">Corticóides <span class="access mix" style="margin-left:4px">free p/ ped.</span> <span class="meta">→ 01d</span></div>
+          <div class="items"><span class="it free">Prednisona</span><span class="it free">Prednisolona</span><span class="it free">Dexametasona</span><span class="it free">Hidrocortisona</span><span class="it free">Metilprednisolona</span><span class="it free">Budesonida</span><span class="it free">Fluticasona</span></div></div>
+      </div>
+    </div>
+
+    <!-- ANTIBIÓTICOS -->
+    <div class="block" style="grid-column:span 2">
+      <h2>⑤ Antibióticos <span class="access prem">Premium</span> <span class="n">23 navegáveis</span></h2>
+      <div class="body">
+        <div class="cat"><div class="ch">A–C <span class="meta">→ 02a</span></div>
+          <div class="items">
+            <span class="it">acetilcefuroxima</span><span class="it">albendazol</span><span class="it">amicacina</span><span class="it">amoxicilina</span><span class="it">amox-clavulanato</span><span class="it">amox-sulbactam</span><span class="it">ampicilina</span><span class="it">ampi-sulbactam</span><span class="it">azitromicina</span><span class="it">cefalexina</span><span class="it">cefepima</span><span class="it">ceftriaxone</span><span class="it">cefuroxima</span><span class="it">claritromicina</span></div></div>
+        <div class="cat"><div class="ch">G–V <span class="meta">→ 02b</span></div>
+          <div class="items">
+            <span class="it">gentamicina</span><span class="it">mebendazol</span><span class="it">meropenem</span><span class="it">metronidazol</span><span class="it">penicilina G benzatina</span><span class="it">penicilina G cristalina</span><span class="it">penicilina procaína</span><span class="it">secnidazol</span><span class="it">vancomicina</span></div></div>
+        <div class="note">⚠️ Um módulo ADULTO de ~38 antibióticos hospitalares (ceftazidima, anfotericina, ciprofloxacin…) está empacotado no mesmo bundle, <b>desconectado</b> do menu pediátrico → <span class="meta">02c</span>. Não é pediatria.</div>
+      </div>
+    </div>
+
+    <!-- URGÊNCIAS -->
+    <div class="block" style="grid-column:span 2">
+      <h2>⑥ Urgências <span class="n">10 protocolos</span></h2>
+      <div class="body">
+        <div class="cat"><div class="ch">Fluxos <span class="meta">→ 03a / 03b / 03c</span></div>
+          <div class="items">
+            <span class="it">Diarreia (Planos A/B/C) <span class="tag proto">🩺</span></span>
+            <span class="it">Exac. Asma → leve-mod / grave <span class="tag proto">🩺</span></span>
+            <span class="it">Crise Convulsiva (6 drogas) <span class="tag proto">🩺</span></span>
+            <span class="it free">Anafilaxia <span class="tag proto">🩺</span></span>
+            <span class="it free">Hipoglicemia <span class="tag proto">🩺</span></span>
+            <span class="it">Bradicardia <span class="tag proto">🩺</span></span>
+            <span class="it">Taquicardia <span class="tag proto">🩺</span></span>
+            <span class="it">Intubação (steps 1–5) <span class="tag proto">🩺</span></span>
+            <span class="it">Ventilação Mecânica <span class="tag proto">🩺</span></span></div></div>
+        <div class="cat"><div class="ch">PCR — calculadora Cargas &amp; Doses (5 abas) <span class="meta">→ 03c</span></div>
+          <div class="items"><span class="it">Adrenalina</span><span class="it">Amiodarona</span><span class="it">Lidocaína</span><span class="it">Sulfato Mg</span><span class="it">Carga do choque (J/kg)</span></div></div>
+      </div>
+    </div>
+
+    <!-- DILUIÇÕES -->
+    <div class="block">
+      <h2>⑦ Diluições e Doses <span class="access prem">Premium</span></h2>
+      <div class="body">
+        <div class="cat"><div class="ch">→ 04</div>
+          <div class="items">
+            <span class="it">Hidratação-Manutenção <span class="tag calc">🧮</span></span>
+            <span class="it">Drogas Vasoativas (8) — vazão/volume <span class="tag calc">🧮</span></span>
+            <span class="it">Soluções Personalizadas — oral / vazão / volume</span>
+            <span class="it">Ketofol</span><span class="it">Ketodex</span></div></div>
+        <div class="note">"Monte sua solução": Nº ampolas · mL soro · Concentração · Defina a dose. Custom solutions: criar/salvar/editar.</div>
+      </div>
+    </div>
+
+    <!-- CALCULADORAS -->
+    <div class="block">
+      <h2>⑧ Calculadoras Médicas</h2>
+      <div class="body">
+        <div class="cat"><div class="ch">→ 05</div>
+          <div class="items">
+            <span class="it">Clearance de Creatinina <span class="tag calc">🧮</span></span>
+            <span class="it">Superfície Corporal <span class="tag calc">🧮</span></span>
+            <span class="it">Taxa de Infusão <span class="tag calc">🧮</span></span></div></div>
+      </div>
+    </div>
+
+    <!-- CONVERSORES -->
+    <div class="block">
+      <h2>⑨ Conversores <span class="access free">free</span> <span class="n">7</span></h2>
+      <div class="body">
+        <div class="cat"><div class="ch">→ 05</div>
+          <div class="items">
+            <span class="it free">mL/h ↔ mcg/kg/min</span><span class="it free">mcg/kg/min → mL/h</span><span class="it free">mL/h ↔ gts/min</span><span class="it free">% → mg/mL</span><span class="it free">mL/h → mcg/min</span><span class="it free">mcg/min → mL/h</span><span class="it free">Corticóides</span></div></div>
+      </div>
+    </div>
+
+    <!-- INFORMAÇÕES -->
+    <div class="block">
+      <h2>⑩ Informações</h2>
+      <div class="body">
+        <div class="cat"><div class="ch">→ 05b</div>
+          <div class="items"><span class="it">Sinais Vitais Normais (FC/FR/PA) <span class="tag solo">📄 imagem JPG</span></span></div></div>
+        <div class="cat"><div class="ch">Doses Pediátricas <span class="meta">→ 05</span></div>
+          <div class="items"><span class="it">criar / salvar / ver doses (new + view)</span></div></div>
+      </div>
+    </div>
+
+    <!-- PLANTÃO -->
+    <div class="block">
+      <h2>⑪ Plantão</h2>
+      <div class="body">
+        <div class="cat"><div class="ch">Ferramentas</div>
+          <div class="items"><span class="it">Dividir Descanso</span><span class="it">CalcMed Eletro</span><span class="it">Minhas Anotações</span></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flags">
+    <h3>⚠️ Achados as-is (flags para a Nova Home / produto)</h3>
+    <ul>
+      <li>O bundle empacota <b>DOIS apps</b> (pediátrico + adulto) — telas adultas e ~38 antibióticos hospitalares viajam junto, desconectados do menu pediátrico.</li>
+      <li><b>Diclofenaco</b> = único órfão pediátrico real (tela completa no bundle, sem rota no menu).</li>
+      <li><b>Metoclopramida</b> = item de menu sem calculadora (só bloco de aviso).</li>
+      <li><b>Sinais Vitais</b> = conteúdo em imagem JPG (não pesquisável, sem dark, não acessível) — valores transcritos em 05b.</li>
+      <li><b>Premium é definido no app</b></li>
+    </ul>
+  </div>
+
+  <footer>
+    Cobertura verificada adversarialmente: 101/101 rotas navegáveis (94 <code>/pediatra/*</code> + 7 conversores) = <b>100%</b> · 9 seções <b>complete</b>, 3 <b>minor-gaps</b>, 0 major-gaps · zero órfãos pediátricos novos na varredura.
+    Conteúdo clínico verbatim em <code>raw/&lt;seção&gt;.md</code> · matriz completa em <code>raw/_coverage-matrix.md</code>.
+  </footer>
+</div>
+</body>
+</html>

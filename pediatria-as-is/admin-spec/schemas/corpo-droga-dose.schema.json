@@ -1,0 +1,448 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-droga-dose.schema.json",
+  "title": "Corpo do molde T1 droga-dose (corpo.dosagem) — 8 sub-tipos D1..D8",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'droga-dose'. Carrega o sub-tipo de calculo (`tipo` ∈ D1..D8), apresentacoes[], posologias[] (texto, [REAL]) e a `regraCalculo` estruturada que dirige a conta (fase 2, [PROPOSTA]). Os 14 arquetipos de dose (7 ped + 7 preset adulto) colapsam em 8 sub-tipos (01-sistema-de-tipos §3). `ataque-manutencao` NAO e sub-tipo: e o `papel` da posologia. Fonte: 03-backend-json.md §2.1/§3, 00-HANDOFF-GUI.md §2.2/§2.3, MODELO-DOSE-PEDIATRICA.md §8.",
+  "x-status": "T1 envelope+posologias [REAL]; regraCalculo e D2-D8 [PROPOSTA fase2]",
+  "x-subtipos": {
+    "D1": "fixo            — dose literal, sem input, sem regraCalculo. Exibe posologias. (PED fixo; ADULTO simples)",
+    "D2": "lookup          — string fixa por faixa (idade OU peso); sem aritmetica.",
+    "D3": "peso-computado  — dose = fator x peso (+teto). regraCalculo.tipo=porPeso.",
+    "D4": "hibrido         — gate de idade + ramos por apresentacao/indicacao/idade/IG; cada ramo computa (porPeso) ou texto. regraCalculo.tipo=hibrido. Buraco central da pediatria.",
+    "D5": "renal           — dose por faixa de clearance (Cockcroft) + ramo dialise. regraCalculo.tipo=faixaClearance. So-adulto.",
+    "D6": "regime          — seletor unica vs multiplas, cada um com sua arvore de clearance. regraCalculo.tipo=regime.",
+    "D7": "infusao-bic     — peso + dose alvo + vazao -> getters encadeados (DAG) -> mL/h. regraCalculo.tipo=infusaoBic.",
+    "D8": "so-aviso        — sem dose; so o campo `aviso`. tem_dose=false."
+  },
+  "x-nota-calculada": "O preset adulto `calculada` NAO e sub-tipo de calculo: e regraCalculo.tipo=definirDose dentro de porPeso/renal. BLOQUEADO ate fase 2 (gate REAL). Modelado em $defs/regra_definirDose.",
+  "type": "object",
+  "required": ["tipo", "posologias"],
+  "properties": {
+    "tipo": {
+      "description": "Sub-tipo D1..D8 do calculo. Dirige qual regraCalculo vale.",
+      "enum": ["fixo", "lookup", "peso-computado", "hibrido", "renal", "regime", "infusao-bic", "so-aviso"]
+    },
+    "apresentacoes": {
+      "type": "array",
+      "description": "Apresentacoes/concentracoes. O seletor troca o fator/concentracao. `fator = mg_por_kg / concentracao_mg_ml`.",
+      "items": { "$ref": "#/$defs/apresentacao" }
+    },
+    "posologias": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Linhas de prescricao em TEXTO [REAL]. posologias[0].alternativa SEMPRE false (invariante estrutural; o 'ou' exige uma dose anterior).",
+      "prefixItems": [
+        {
+          "allOf": [
+            { "$ref": "#/$defs/posologia" },
+            { "properties": { "alternativa": { "const": false } } }
+          ]
+        }
+      ],
+      "items": { "$ref": "#/$defs/posologia" }
+    },
+    "regraCalculo": {
+      "description": "Objeto declarativo que dirige a conta (fase 2). Ausente/null em D1 fixo e D8 so-aviso (o admin so liga slots e digita texto, como hoje [REAL]).",
+      "$ref": "#/$defs/regraCalculo"
+    },
+    "aviso": {
+      "type": "string",
+      "description": "So-aviso (D8): cuidado clinico exibido sem dose."
+    },
+    "tem_dose": {
+      "type": "boolean",
+      "description": "D8 so-aviso = false."
+    },
+    "doseMaxima": {
+      "type": "object",
+      "required": ["tipo"],
+      "description": "Teto transversal da tela. CRITICO: `tipo` clamp = min() aplicado no engine; texto = so copy (NAO clampa). Trocar texto->clamp e comportamento clinico NOVO (F-16).",
+      "properties": {
+        "valor": { "type": ["number", "null"] },
+        "unidade": { "type": "string" },
+        "tipo": { "enum": ["clamp", "texto"] }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "tipo": { "const": "peso-computado" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_porPeso" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "lookup" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_lookup" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "hibrido" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_hibrido" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "renal" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_faixaClearance" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "regime" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_regime" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "infusao-bic" } } },
+      "then": {
+        "properties": { "regraCalculo": { "$ref": "#/$defs/regra_infusaoBic" } }
+      }
+    },
+    {
+      "if": { "properties": { "tipo": { "const": "so-aviso" } } },
+      "then": {
+        "required": ["aviso"],
+        "properties": { "tem_dose": { "const": false } }
+      }
+    }
+  ],
+  "$defs": {
+    "apresentacao": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "concentracao_mg_ml": { "type": ["number", "null"] },
+        "forma": { "enum": ["suspensao", "gotas", "comprimido", "ampola", "frasco", "spray", "outro"] }
+      }
+    },
+    "posologia": {
+      "type": "object",
+      "description": "Linha de prescricao em TEXTO [REAL, do schema atual]. defaultPosologia garante todas as chaves. doseTipo PROIBIDO (campo morto; normalize remove).",
+      "required": [
+        "id", "papel", "cenario", "droga", "dose", "unidade",
+        "diluente", "viaInline", "tempo", "intervalo", "esquema", "alternativa"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "papel": {
+          "description": "Papel clinico (PAPEL_OPTIONS). ataque/manutencao aqui = como o padrao ataque-manutencao e expresso (nao e sub-tipo).",
+          "enum": ["direta", "cenario", "ataque", "manutencao", "indicacao"]
+        },
+        "cenario": { "type": "string", "description": "Condicao quando papel=cenario (texto livre)." },
+        "droga": { "type": "string", "description": "Droga da linha (normalmente = nome do item; divergencia gera warning)." },
+        "dose": { "type": "string", "description": "Dose em texto livre (ex.: '5 a 10')." },
+        "unidade": { "type": "string", "description": "Unidade (mg/kg, g, mL...). Dose sem unidade bloqueia publicacao." },
+        "diluente": { "type": "string" },
+        "viaInline": {
+          "description": "Via atomica da linha (a combinada EV+Oral e so da tela).",
+          "enum": ["EV", "Oral", "IM"]
+        },
+        "tempo": { "type": "string", "description": "Tempo de infusao (ex.: em 1 hora)." },
+        "intervalo": { "type": "string", "description": "Intervalo entre doses (ex.: 8/8h)." },
+        "esquema": { "type": "string" },
+        "alternativa": { "type": "boolean", "description": "Linha alternativa ('ou') a anterior. Sempre false na primeira." },
+        "doseTipo": false
+      }
+    },
+
+    "regraCalculo": {
+      "type": "object",
+      "required": ["tipo"],
+      "description": "Os 7 tipos do engine `evalRegra` (fase 2, [PROPOSTA]). oneOf por discriminador interno `tipo`.",
+      "oneOf": [
+        { "$ref": "#/$defs/regra_porPeso" },
+        { "$ref": "#/$defs/regra_lookup" },
+        { "$ref": "#/$defs/regra_hibrido" },
+        { "$ref": "#/$defs/regra_faixaClearance" },
+        { "$ref": "#/$defs/regra_regime" },
+        { "$ref": "#/$defs/regra_infusaoBic" },
+        { "$ref": "#/$defs/regra_definirDose" }
+      ]
+    },
+
+    "teto": {
+      "type": "object",
+      "required": ["tipo"],
+      "description": "Teto de uma saida. clamp = min(saida, valor); texto = copy, nao clampa (F-16).",
+      "properties": {
+        "valor": { "type": ["number", "null"] },
+        "tipo": { "enum": ["clamp", "texto"] }
+      }
+    },
+
+    "saida": {
+      "type": "object",
+      "required": ["id"],
+      "description": "Uma saida computada de porPeso/hibrido. Use EXATAMENTE um de: `fator`, (`fator_min`+`fator_max`), ou `expr` (DSL, M1/B-02 — para floor/ternario tipo Ibuprofeno 200 mg/mL e max da 50 mg/mL). `casas:null` = saida crua (paridade Hidroxizina/Escopolamina, F-10/F-13). Teto via `teto:{valor,tipo}` OU `teto_expr` (DSL).",
+      "properties": {
+        "id": { "type": "string" },
+        "fator": { "type": "number", "description": "saida = round(fator x peso, casas). fator = mg_por_kg / concentracao_mg_ml." },
+        "fator_min": { "type": "number", "description": "Faixa min-max (Glicerina, Prednisona): saida_min = fator_min x peso." },
+        "fator_max": { "type": "number" },
+        "expr": { "type": "string", "description": "Expressao DSL fechada (§4), p/ saida condicional/floor. Ex.: 'peso>=40 ? 20 : peso*2', 'floor(peso/4)'. Substitui `fator`." },
+        "casas": { "type": ["integer", "null"], "description": "Casas decimais; null = saida crua (sem arredondar)." },
+        "teto": { "$ref": "#/$defs/teto" },
+        "teto_expr": { "type": "string", "description": "Teto como expressao DSL (substitui `teto`). Ex.: 'peso>=40 ? 20 : null'." },
+        "porPeso": {
+          "$ref": "#/$defs/saidaPorPeso",
+          "description": "Forma aninhada usada dentro de hibrido.ramos[].saidas[] (00-HANDOFF §2.2 instancia Ibuprofeno)."
+        },
+        "rotulo": { "type": "string" }
+      }
+    },
+    "saidaPorPeso": {
+      "type": "object",
+      "description": "Bloco porPeso aninhado (fator + casas + teto), usado em hibrido.ramos[].saidas[].porPeso.",
+      "properties": {
+        "fator": { "type": "number" },
+        "fator_min": { "type": "number" },
+        "fator_max": { "type": "number" },
+        "casas": { "type": ["integer", "null"] },
+        "teto": { "$ref": "#/$defs/teto" }
+      }
+    },
+
+    "regra_porPeso": {
+      "type": "object",
+      "title": "D3 porPeso — dose = fator x peso, teto opcional",
+      "required": ["tipo", "saidas"],
+      "properties": {
+        "tipo": { "const": "porPeso" },
+        "saidas": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/saida" } },
+        "fator_min": { "type": ["number", "null"] },
+        "fator_max": { "type": ["number", "null"] }
+      }
+    },
+
+    "faixaIdadePeso": {
+      "type": "object",
+      "description": "Faixa para lookup. Use min_meses/max_meses, min_anos/max_anos, ou min_kg/max_kg (Dipirona). Bordas seguem `inclusividade` declarada (F-06/C-03).",
+      "properties": {
+        "min_meses": { "type": "number" }, "max_meses": { "type": "number" },
+        "min_anos": { "type": "number" }, "max_anos": { "type": "number" },
+        "min_kg": { "type": "number" }, "max_kg": { "type": "number" }
+      }
+    },
+    "regra_lookup": {
+      "type": "object",
+      "title": "D2 lookup — string fixa por faixa (sem aritmetica)",
+      "required": ["tipo", "indexar_por", "tabela"],
+      "properties": {
+        "tipo": { "const": "lookup" },
+        "indexar_por": { "enum": ["idade", "peso"], "description": "idade (faixa em meses/anos) ou peso (Dipirona, min_kg/max_kg)." },
+        "tabela": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["faixa", "dose"],
+            "properties": {
+              "faixa": { "$ref": "#/$defs/faixaIdadePeso" },
+              "dose": { "type": "string", "description": "String de dose fixa exibida." },
+              "frequencia": { "type": "string" },
+              "max_texto": { "type": "string" }
+            }
+          }
+        },
+        "inclusividade": {
+          "type": "string",
+          "description": "Regra de borda. GAP B-06: a fonte mistura >=/</> na mesma droga; idealmente por-extremo-por-faixa."
+        },
+        "ramos_substituicao": {
+          "type": "array",
+          "description": "GAP M2 [PROPOSTA]: condicionais que SUBSTITUEM a tabela, avaliadas ANTES dela (Dipirona '<3m OU peso<5 -> Contraindicado'; 'peso>=53 -> Avalie dose adulto').",
+          "items": {
+            "type": "object",
+            "required": ["condicao", "texto"],
+            "properties": {
+              "condicao": { "type": "string", "description": "expr booleana DSL (§4)." },
+              "texto": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "gateTermo": {
+      "type": "object",
+      "required": ["campo", "cmp", "valor"],
+      "properties": {
+        "unidade": { "enum": ["Meses", "Anos"], "description": "Unidade da idade neste termo (F-09 RESOLVIDO: sempre explicita, nunca indice numerico)." },
+        "campo": { "type": "string", "description": "Input avaliado (ex.: idade)." },
+        "cmp": { "enum": [">", ">=", "<", "<=", "==", "!="] },
+        "valor": { "type": "number" }
+      }
+    },
+    "gateRegra": {
+      "type": "object",
+      "required": ["op", "termos"],
+      "properties": {
+        "op": { "enum": ["E", "OU", "NAO"], "description": "Combinador booleano estruturado (forma segura do gate, §3.3)." },
+        "termos": { "type": "array", "items": { "$ref": "#/$defs/gateTermo" } }
+      }
+    },
+    "ramoHibrido": {
+      "type": "object",
+      "required": ["por", "quando"],
+      "description": "Um ramo do hibrido. Computa (saidas[] com porPeso|expr) OU exibe texto fixo.",
+      "properties": {
+        "por": { "enum": ["apresentacao", "indicacao", "idade", "ig"], "description": "Dimensao que seleciona o ramo." },
+        "quando": { "type": "string", "description": "Valor que casa (id de apresentacao, nome de indicacao, etc.)." },
+        "saidas": { "type": "array", "items": { "$ref": "#/$defs/saida" } },
+        "texto": { "type": "string", "description": "Ramo de texto fixo (sem computar)." }
+      }
+    },
+    "ramoNeonatal": {
+      "type": "object",
+      "description": "NOVO [PROPOSTA]: ramo por idade gestacional (semanas) + dias-de-vida. Hoje exposto como rotulo de texto, nao input numerico (gap 2). Buraco central da pediatria neonatal.",
+      "properties": {
+        "ig_min_semanas": { "type": "number" }, "ig_max_semanas": { "type": "number" },
+        "dias_vida_min": { "type": "number" }, "dias_vida_max": { "type": "number" },
+        "peso_corte_kg": { "type": "number", "description": "Gating SNC por peso <=2kg / >2kg (Meropenem, Vancomicina)." },
+        "saidas": { "type": "array", "items": { "$ref": "#/$defs/saida" } },
+        "texto": { "type": "string" },
+        "intervalo": { "type": "string" }
+      }
+    },
+    "regra_hibrido": {
+      "type": "object",
+      "title": "D4 hibrido — gate de idade + ramos (peso x idade/apresentacao/indicacao/IG)",
+      "required": ["tipo"],
+      "properties": {
+        "tipo": { "const": "hibrido" },
+        "gate_idade": {
+          "type": "object",
+          "required": ["regra", "se_falso"],
+          "properties": {
+            "regra": { "$ref": "#/$defs/gateRegra" },
+            "se_falso": {
+              "type": "object",
+              "required": ["tipo", "texto"],
+              "properties": {
+                "tipo": { "const": "contraindicado" },
+                "texto": { "type": "string", "description": "Substitui a dose (gate DURO). Ex.: 'Contraindicado Ibuprofeno'." }
+              }
+            }
+          }
+        },
+        "ramos": { "type": "array", "items": { "$ref": "#/$defs/ramoHibrido" } },
+        "ramos_neonatais": { "type": "array", "items": { "$ref": "#/$defs/ramoNeonatal" } }
+      }
+    },
+
+    "faixaClearance": {
+      "type": "object",
+      "required": ["min", "posologiaRef"],
+      "properties": {
+        "min": { "type": "number" },
+        "max": { "type": ["number", "null"] },
+        "posologiaRef": { "type": "string", "description": "id de uma posologia existente (validate checa)." }
+      }
+    },
+    "regra_faixaClearance": {
+      "type": "object",
+      "title": "D5 renal — faixa de clearance (Cockcroft) + ramo dialise [REAL produção hardcode]",
+      "required": ["tipo", "variavel", "faixas"],
+      "properties": {
+        "tipo": { "const": "faixaClearance" },
+        "variavel": { "const": "clearance" },
+        "cockcroft": { "type": "boolean", "description": "ON -> TFGe=(140-idade)x peso/(CrS x72), x0,85 mulher [REAL]." },
+        "faixas": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/faixaClearance" } },
+        "inclusividade": { "type": "string", "description": "Ex.: 'min-inclusivo-max-exclusivo'." },
+        "diaramo": {
+          "type": "object",
+          "properties": {
+            "ativo": { "type": "boolean" },
+            "prescricaoRef": { "type": "string" },
+            "nota": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "regra_regime": {
+      "type": "object",
+      "title": "D6 regime — unica vs multiplas, cada um com sua arvore de clearance [REAL]",
+      "required": ["tipo", "modos"],
+      "properties": {
+        "tipo": { "const": "regime" },
+        "modos": {
+          "type": "object",
+          "required": ["unica", "multiplas"],
+          "properties": {
+            "unica": {
+              "type": "object",
+              "properties": { "faixas": { "type": "array", "items": { "$ref": "#/$defs/faixaClearance" } } }
+            },
+            "multiplas": {
+              "type": "object",
+              "properties": { "faixas": { "type": "array", "items": { "$ref": "#/$defs/faixaClearance" } } }
+            }
+          }
+        }
+      }
+    },
+
+    "regra_infusaoBic": {
+      "type": "object",
+      "title": "D7 infusao-bic — getters encadeados (DAG) [REAL produção]",
+      "required": ["tipo", "inputs", "getters"],
+      "properties": {
+        "tipo": { "const": "infusaoBic" },
+        "inputs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ex.: ['peso','dose_desejada_mcg_kg_min','vazao_desejada_ml_h']. FLAG M3/B-08: token orfao gE2 (vol-alvo?) precisa virar input antes de modelar Terbutalina."
+        },
+        "getters": {
+          "type": "object",
+          "description": "Mapa nome->expr DSL. Avaliados em ordem de dependencia (DAG). Nomes devem casar 1:1 nas referencias.",
+          "additionalProperties": { "type": "string" }
+        },
+        "concentracao_maxima_mcg_ml": { "type": "number" },
+        "dose_maxima": {
+          "type": "object",
+          "properties": {
+            "valor": { "type": ["number", "null"] },
+            "unidade": { "type": "string" },
+            "tipo": { "enum": ["clamp", "texto"] }
+          }
+        }
+      }
+    },
+
+    "regra_definirDose": {
+      "type": "object",
+      "title": "calculada / definirDose — usuario define dose mg/kg na faixa. BLOQUEADO ate fase 2 [REAL gate]",
+      "required": ["tipo", "faixaPermitida"],
+      "properties": {
+        "tipo": { "const": "definirDose" },
+        "faixaPermitida": {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" },
+            "unidade": { "type": "string" }
+          }
+        },
+        "derivados": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["expr"],
+            "properties": {
+              "expr": { "type": "string", "description": "DSL." },
+              "cap": { "type": "number" },
+              "rotulo": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

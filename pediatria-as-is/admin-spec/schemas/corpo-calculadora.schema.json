@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-calculadora.schema.json",
+  "title": "Corpo do molde T2 calculadora-formula (corpo.calculo)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'calculadora-formula'. 1-N inputs numericos -> fórmula(s) DSL fechada -> 1+ saidas; opcional faixas de classificacao. Multi-fórmula = N entradas em `formulas` (QTc Bazett/Fridericia/Framingham/Hodges lado a lado; Clearance CKD-EPI 2021+2009+Cockcroft). Guard universal do engine (nao declarado por item): NaN/+-Inf->0, virgula->ponto. Fonte: 03-backend-json.md §2.2, 00-HANDOFF-GUI.md §2.4 (instancia IMC verbatim do bundle).",
+  "x-status": "[PROPOSTA]",
+  "type": "object",
+  "required": ["inputs", "formulas"],
+  "properties": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "unidade": { "type": "string", "description": "Unidade do input (ex.: kg, cm). Load-bearing: IMC usa altura em CM (fator 1e4), nao metros." },
+          "validacao": {
+            "type": "object",
+            "description": "Guard de validade clinica. Esconde/avisa fora do dominio (LDL some se TG>=400; Peso Ideal exige altura 123-213; Relacao P/F exige FiO2 21-100).",
+            "properties": {
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "msg": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "formulas": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "expr"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "expr": { "type": "string", "description": "Expressao no DSL fechado (§4). Sem eval; whitelist de funcoes." },
+          "casas": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "faixas_classificacao": {
+      "type": "array",
+      "description": "Opcional. Expressao booleana sobre as saidas -> rotulo + texto (IMC 6 faixas; Relacao P/F 4 faixas SDRA; estagio DRC).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "condicao": { "type": "string", "description": "expr booleana DSL sobre as saidas (ex.: '>=24.9 && <30')." },
+          "rotulo": { "type": "string" },
+          "texto": { "type": "string" }
+        }
+      }
+    },
+    "inputs_mutuamente_exclusivos": {
+      "type": "array",
+      "description": "Pares onde preencher um zera/desabilita o outro (QTc FC<->RR).",
+      "items": { "type": "array", "items": { "type": "string" } }
+    },
+    "notas": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Texto fixo de referencia."
+    }
+  }
+}

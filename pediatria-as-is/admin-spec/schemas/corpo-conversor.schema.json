@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/corpo-conversor.schema.json",
+  "title": "Corpo do molde T7 conversor (corpo.conversor)",
+  "description": "Sub-objeto `corpo` quando envelope.tipo == 'conversor'. Conversao de unidade onde o calculo multiplica/divide pelos fatores `fator_b` da opcao escolhida no dropdown. Ex.: Taxa de Infusao, os 7 conversores de infusao (mL/h<->mcg/kg/min, mL/h<->gts/min, %->mg/mL), Conversor de Corticoides. Sem clinica nuclear. Fonte: 03-backend-json.md §2.7, 01-sistema-de-tipos §2 T7.",
+  "x-status": "[PROPOSTA]",
+  "type": "object",
+  "required": ["inputs", "formula"],
+  "properties": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "dropdowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "opcoes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "fator_b": { "type": "number", "description": "Fator `.b` da opcao (do AS-IS); entra na formula." }
+              }
+            }
+          }
+        }
+      }
+    },
+    "formula": {
+      "type": "string",
+      "description": "expr DSL fechada (§4) multiplicando/dividindo pelos fator_b dos dropdowns."
+    },
+    "nota_fixa": { "type": ["string", "null"], "description": "ex.: '1 mL = 20 gotas'." }
+  }
+}

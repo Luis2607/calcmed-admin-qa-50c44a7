@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CalcMed · Onboarding Lab</title>
+<style>
+  /* ============================================================
+     Tokens: valores 1:1 de src/shared/styles/tokens.css
+     Linguagem visual das telas: recriação fiel do app real
+     (screenshot Home 2026-07-05 + qa-screenshots/canvas-pcr-avc)
+     ============================================================ */
+  :root{
+    --navy:#0D1B2A; --logo:#002060;
+    --teal:#007993; --teal-hover:#006275; --cyan:#00B4D8;
+    --tint-04:rgba(0,121,147,.04); --tint-08:rgba(0,121,147,.08);
+    --ink:#0F172A; --ink-2:#475569; --ink-3:#94A3B8; --on-color:#FFFFFF;
+    --card:#FFFFFF; --elevado:#F1F5F9; --page:#F8FAFC;
+    --borda:#E2E8F0; --borda-sutil:#F1F5F9;
+    --ok:#047857; --ok-bg:#ECFDF5; --ok-bd:#A7F3D0;
+    --crit:#991B1B; --crit-bg:#FEF2F2; --crit-bd:#FECACA;
+    --warn:#92400E; --warn-bg:#FFFBEB; --warn-bd:#FCD34D;
+    --info:#6D28D9; --info-bg:rgba(124,58,237,.06); --info-bd:rgba(124,58,237,.35);
+    --urg-solid:#E11D48;
+    --shadow:0 4px 12px rgba(0,0,0,.04);
+    --lift:0 12px 32px -10px rgba(0,121,147,.18);
+    --r:12px; --pill:999px; --r-view:40px; --r-sheet:20px;
+    --fonte:'Inter',system-ui,-apple-system,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,'SF Mono',monospace;
+    --ease:cubic-bezier(.2,0,0,1);
+    /* tiles de domínio (tags reais do DS) */
+    --t-urg-bg:#FFF1F2;--t-urg:#E11D48; --t-dil-bg:#EFF6FF;--t-dil:#1D4ED8;
+    --t-calc-bg:#FFF7ED;--t-calc:#EA580C; --t-prot-bg:#FAF5FF;--t-prot:#9333EA;
+    --t-esc-bg:#ECFEFF;--t-esc:#0891B2; --t-conv-bg:#EEF2FF;--t-conv:#4F46E5;
+    --t-chk-bg:#ECFDF5;--t-chk:#047857; --t-cond-bg:#FDF2F8;--t-cond:#9D174D;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--fonte);background:var(--page);color:var(--ink);-webkit-font-smoothing:antialiased;font-feature-settings:'cv02','cv03','cv04','cv11';line-height:1.5}
+  h1,h2,h3{text-wrap:balance} p{text-wrap:pretty}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+  /* ================= Lab chrome ================= */
+  header.lab{padding:36px 0 22px;background:var(--card);border-bottom:1px solid var(--borda)}
+  .kicker{display:inline-flex;gap:8px;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--teal);background:var(--tint-08);border:1px solid rgba(0,121,147,.18);padding:5px 12px;border-radius:var(--pill)}
+  header.lab h1{font-size:clamp(22px,3vw,30px);letter-spacing:-.02em;margin:12px 0 4px}
+  .lede{font-size:14px;color:var(--ink-2);max-width:78ch}
+  .meta{margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-3)}
+  .meta b{color:var(--ink-2);font-weight:600}
+
+  .selector{padding:18px 0 0}
+  .selector-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .props{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:980px){.props{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.props{grid-template-columns:1fr}}
+  .prop{text-align:left;background:var(--card);border:1.5px solid var(--borda);border-radius:var(--r);padding:13px 15px;display:flex;flex-direction:column;gap:5px;transition:all .16s var(--ease)}
+  .prop:hover{border-color:var(--teal)}
+  .prop.active{border-color:var(--teal);box-shadow:var(--lift);background:linear-gradient(180deg,var(--tint-04),var(--card))}
+  .prop .n{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);text-transform:uppercase}
+  .prop.active .n{color:var(--teal)}
+  .prop h3{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+  .prop p{font-size:11.5px;color:var(--ink-2);line-height:1.45}
+  .badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+  .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:var(--pill);background:var(--elevado);color:var(--ink-2)}
+  .badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.warn{background:var(--warn-bg);color:var(--warn)}
+
+  .workspace{display:grid;grid-template-columns:290px 390px minmax(280px,340px);gap:24px;align-items:start;padding:22px 0 44px;justify-content:center}
+  @media(max-width:1120px){.workspace{grid-template-columns:minmax(280px,1fr) 390px}}
+  @media(max-width:800px){.workspace{grid-template-columns:1fr;justify-items:center}
+    .panel{width:100%;max-width:480px}}
+
+  .panel{background:var(--card);border:1px solid var(--borda);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow)}
+  .panel h4{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px}
+  .panel .row{padding:9px 0;border-bottom:1px solid var(--borda-sutil);display:flex;flex-direction:column;gap:2px}
+  .panel .row:last-child{border-bottom:none}
+  .panel .k{font-size:10.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+  .panel .v{font-size:12.5px;color:var(--ink);line-height:1.5}
+  .panel .v.dim{color:var(--ink-2);font-size:12px}
+
+  .panel-spec .step-name{font-size:15px;font-weight:700}
+  .panel-spec ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:10px}
+  .panel-spec li{font-size:12.5px;color:var(--ink-2);padding-left:16px;position:relative;line-height:1.5}
+  .panel-spec li::before{content:"";position:absolute;left:1px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+  .panel-spec li b{color:var(--ink)}
+  .asset-note{margin-top:12px;font-size:11.5px;line-height:1.5;background:var(--warn-bg);border:1px dashed var(--warn-bd);border-radius:8px;padding:9px 11px;color:var(--warn)}
+  .asset-note.none{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok)}
+  .copy-block{margin-top:12px;background:var(--elevado);border-radius:8px;padding:9px 11px}
+  .copy-block .k{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+  .copy-block .t{font-size:13px;font-weight:700;margin-top:3px}
+  .copy-block .s{font-size:12px;color:var(--ink-2);margin-top:1px}
+
+  .phone-col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .phone{width:390px;height:800px;background:var(--page);border-radius:var(--r-view);box-shadow:0 8px 32px rgba(0,0,0,.14),0 0 0 10px #1e293b,0 0 0 12px #0f172a;overflow:hidden;position:relative;flex-shrink:0}
+  @media(max-width:430px){.phone{width:100%;height:740px}}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+  .screen.active{display:flex;animation:sIn .3s var(--ease)}
+  @keyframes sIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.screen.active{animation:none}}
+
+  .frame-controls{display:flex;align-items:center;gap:14px}
+  .nav-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--borda);background:var(--card);color:var(--ink-2);font-size:15px;display:grid;place-items:center;transition:all .16s var(--ease)}
+  .nav-btn:hover:not(:disabled){border-color:var(--teal);color:var(--teal)}
+  .nav-btn:disabled{opacity:.3;cursor:default}
+  .dots{display:flex;gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--borda);padding:0;transition:all .2s var(--ease)}
+  .dot.on{background:var(--teal);width:20px;border-radius:var(--pill)}
+  .frame-hint{font-size:11px;color:var(--ink-3)}
+
+  /* ================= Peças do app real ================= */
+  .sb{height:44px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600}
+  .sb .r{letter-spacing:2px}
+
+  /* Home real (recriação fiel) */
+  .home-head,.seg,.search,.banner,.h-sec,.chips-row,.pcr-card,.tiles,.mh-head,.mh-card{flex-shrink:0}
+  .home-head{display:flex;align-items:center;gap:10px;padding:6px 16px 0}
+  .home-head .av{width:40px;height:40px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:700;position:relative}
+  .home-head .av::after{content:"";position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #fff;box-shadow:inset 0 0 0 6px var(--cyan)}
+  .home-head .hi{flex:1}
+  .home-head .hi .s{font-size:12px;color:var(--ink-2)}
+  .home-head .hi .n{font-size:19px;font-weight:800;letter-spacing:-.01em}
+  .home-head .ic{width:34px;height:34px;display:grid;place-items:center;color:var(--ink-2);font-size:16px}
+  .seg{margin:12px 16px 0;background:var(--elevado);border-radius:var(--pill);padding:3px;display:flex}
+  .seg button{flex:1;height:36px;border-radius:var(--pill);font-size:13.5px;font-weight:600;color:var(--ink-3);transition:all .18s var(--ease)}
+  .seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(15,23,42,.08)}
+  .search{margin:12px 16px 0;background:var(--card);border:1px solid var(--borda);border-radius:var(--pill);height:46px;display:flex;align-items:center;padding:0 6px 0 14px;gap:8px}
+  .search .ph{flex:1;font-size:13.5px;color:var(--ink-3)}
+  .search .ia{background:var(--navy);color:#fff;font-size:11px;font-weight:700;border-radius:var(--pill);padding:7px 12px;display:flex;gap:5px;align-items:center}
+
+  .banner{margin:12px 16px 0;background:linear-gradient(135deg,#006C84,#009AB8);color:#fff;border-radius:var(--r);padding:13px 15px;position:relative}
+  .banner .x{position:absolute;top:9px;right:11px;color:rgba(255,255,255,.7);font-size:13px}
+  .banner .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+  .banner .t{font-size:15px;font-weight:800;margin-top:2px;letter-spacing:-.01em}
+  .banner .s{font-size:12px;opacity:.85;margin-top:2px;line-height:1.45}
+  .banner .quick{display:flex;gap:8px;margin-top:10px}
+  .banner .quick button{flex:1;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:700;padding:8px;border-radius:8px}
+
+  .h-sec{font-size:17px;font-weight:800;letter-spacing:-.01em;margin:16px 16px 0}
+  .chips-row{display:flex;gap:8px;margin:10px 16px 0;overflow:hidden}
+  .cchip{border:1px solid var(--borda);background:var(--card);color:var(--ink);font-size:13px;font-weight:600;padding:8px 16px;border-radius:var(--pill);flex-shrink:0}
+  .cchip.on{background:var(--teal);border-color:var(--teal);color:#fff}
+  .pcr-card{margin:10px 16px 0;background:var(--urg-solid);color:#fff;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+  .pcr-card .hp{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:15px}
+  .pcr-card .tt{flex:1}
+  .pcr-card .tt .a{font-size:15.5px;font-weight:800}
+  .pcr-card .tt .b{font-size:12px;opacity:.85}
+  .pcr-card .go{background:#fff;color:var(--urg-solid);font-size:13px;font-weight:700;padding:8px 18px;border-radius:var(--pill)}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 16px 0}
+  .tile{background:var(--card);border:1px solid var(--borda-sutil);border-radius:var(--r);padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:var(--shadow)}
+  .tile .ti{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:14px;font-weight:700}
+  .tile .tl{font-size:10px;font-weight:600;color:var(--ink-2)}
+  .mh-head{display:flex;align-items:center;justify-content:space-between;margin:16px 16px 0}
+  .mh-head .t{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .mh-head .edit{color:var(--teal);font-size:13px;font-weight:600;display:flex;gap:5px;align-items:center;position:relative}
+  .mh-card{margin:10px 16px 0;background:var(--card);border:1px solid var(--borda-sutil);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
+  .mh-card .h{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:center}
+  .mh-card .li{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--borda-sutil)}
+  .mh-card .li:last-child{border-bottom:none}
+  .mh-card .li .r{color:var(--ink-3);font-size:11.5px}
+  .tabbar{margin-top:auto;flex-shrink:0;background:var(--card);border-top:1px solid var(--borda-sutil);display:flex;padding:8px 6px 18px}
+  .tabbar .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--ink-3)}
+  .tabbar .tb.on{color:var(--teal)}
+  .tabbar .tb .i{font-size:17px}
+
+  /* Onboarding: telas do carrossel (anatomia Clime: frame + título abaixo + CTA + dots) */
+  .onb{background:var(--page)}
+  .onb .skip{position:absolute;top:52px;right:18px;z-index:5;background:var(--elevado);color:var(--ink-2);font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--pill)}
+  .onb-stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:24px 0 8px;position:relative}
+  .onb-stage::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 340px at 50% 46%,rgba(0,121,147,.09),transparent 70%);pointer-events:none}
+  .onb-frame{width:238px;height:434px;border-radius:34px;background:linear-gradient(160deg,#243447,#0b1220);padding:8px;position:relative;box-shadow:0 2px 4px rgba(13,27,42,.18),0 18px 36px -12px rgba(13,27,42,.32),0 42px 80px -24px rgba(0,121,147,.22)}
+  .onb-frame::after{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:58px;height:15px;border-radius:var(--pill);background:#0b1220;z-index:7;box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+  .onb-frame .inner{width:100%;height:100%;border-radius:27px;overflow:hidden;background:var(--page);position:relative;display:flex;flex-direction:column}
+  .onb-frame .inner::after{content:"";position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:64px;height:4px;border-radius:2px;background:rgba(15,23,42,.22);z-index:7}
+  .onb-caption{padding:8px 28px 0;text-align:center}
+  .onb-caption h2{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.16}
+  .onb-caption p{font-size:14px;color:var(--ink-2);margin-top:7px;line-height:1.5;max-width:32ch;margin-left:auto;margin-right:auto}
+  .onb-foot{padding:16px 24px 22px;display:flex;flex-direction:column;gap:12px;align-items:center}
+  .onb-foot .cta{width:100%;height:52px;border-radius:14px;background:var(--teal);color:#fff;font-size:16px;font-weight:700;letter-spacing:.01em;box-shadow:0 1px 2px rgba(0,98,117,.3),0 6px 16px -6px rgba(0,121,147,.4);transition:all .16s var(--ease)}
+  .onb-foot .cta:hover{background:var(--teal-hover)}
+  .onb-foot .cta:active{transform:scale(.98)}
+  .mini-dots{display:flex;gap:6px}
+  .mini-dots i{width:6px;height:6px;border-radius:50%;background:var(--borda)}
+  .mini-dots i.on{background:var(--teal);width:16px;border-radius:var(--pill)}
+
+  /* Abertura (gradiente da marca) */
+  .opener{background:linear-gradient(168deg,var(--navy) 0%,#0E3A4A 58%,#0A5A70 100%);color:#fff}
+  .opener::before{content:"";position:absolute;inset:0;background:radial-gradient(340px 280px at 50% 30%,rgba(0,180,216,.16),transparent 70%);pointer-events:none}
+  .opener .sb{color:rgba(255,255,255,.85);position:relative;z-index:2}
+  .opener .onb-stage::before{display:none}
+  .opener .word{font-size:42px;font-weight:800;letter-spacing:-.03em;position:relative;z-index:2}
+  .opener .word b{color:var(--cyan)}
+  .opener .word .pulse{display:block;margin:0 auto 18px;width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(4px);display:grid;place-items:center;font-size:24px;color:var(--cyan);box-shadow:0 12px 32px -8px rgba(0,0,0,.4)}
+  .opener .onb-caption{position:relative;z-index:2}
+  .opener .onb-caption h2{color:#fff;font-size:27px}
+  .opener .onb-caption p{color:rgba(255,255,255,.75)}
+  .opener .onb-foot{position:relative;z-index:2}
+  .opener .cta{background:#fff;color:var(--navy);box-shadow:0 2px 4px rgba(0,0,0,.25),0 12px 28px -8px rgba(0,0,0,.4)}
+  .opener .cta:hover{background:#F1F5F9}
+  .opener .ghost{width:100%;height:48px;border-radius:14px;border:1px solid rgba(255,255,255,.3);color:#fff;font-size:15px;font-weight:600;transition:all .16s var(--ease)}
+  .opener .ghost:hover{background:rgba(255,255,255,.08)}
+  .opener .mini-dots i{background:rgba(255,255,255,.3)}
+  .opener .mini-dots i.on{background:#fff}
+  .ecg{position:absolute;left:0;right:0;top:34%;opacity:.16;pointer-events:none}
+
+  /* mini-telas dentro do onb-frame (sugerem o print real; marcadas como ASSET) */
+  .asset-flag{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);z-index:8;background:var(--warn-bg);border:1px dashed var(--warn-bd);color:var(--warn);font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:var(--pill);white-space:nowrap}
+  .mini{transform:scale(1);display:flex;flex-direction:column;height:100%;font-size:9px}
+  .mini .m-head{background:var(--card);padding:22px 12px 9px;border-bottom:1px solid var(--borda-sutil)}
+  .mini .m-head .a{font-size:12px;font-weight:800;letter-spacing:-.01em}
+  .mini .m-head .b{font-size:8.5px;color:var(--ink-3);margin-top:1px}
+  .mini .m-body{flex:1;padding:11px;display:flex;flex-direction:column;gap:8px}
+  .mini .heart{width:52px;height:52px;border-radius:50%;background:var(--crit-bg);display:grid;place-items:center;margin:14px auto 0;color:var(--urg-solid);font-size:20px}
+  .mini .big{font-size:14px;font-weight:800;text-align:center}
+  .mini .sub{font-size:8.5px;color:var(--ink-2);text-align:center;line-height:1.4;padding:0 8px}
+  .mini .cta-t{margin-top:auto;background:var(--teal);color:#fff;border-radius:8px;padding:9px;text-align:center;font-size:10px;font-weight:700}
+  .mini .timer{font-family:var(--mono);font-size:26px;font-weight:700;text-align:center;color:var(--ink)}
+  .mini .tlbl{font-size:7.5px;color:var(--ink-3);text-align:center;text-transform:uppercase;letter-spacing:.08em}
+  .mini .card{background:var(--card);border:1px solid var(--borda-sutil);border-radius:8px;padding:7px 8px;font-size:8.5px}
+  .mini .bub-q{background:var(--teal);color:#fff;border-radius:9px 9px 2px 9px;padding:6px 8px;font-size:8.5px;align-self:flex-end;max-width:82%}
+  .mini .bub-a{background:var(--card);border:1px solid var(--borda-sutil);border-radius:9px 9px 9px 2px;padding:6px 8px;font-size:8.5px;max-width:88%;line-height:1.45}
+  .mini .bub-a b{color:var(--teal)}
+  .mini .src{font-size:7px;color:var(--ink-3)}
+
+  /* Pergunta única (P2) — cards estilo Foodllama na língua do DS */
+  .q-progress{display:flex;gap:5px;padding:14px 92px 0 16px}
+  .q-progress i{flex:1;height:4px;border-radius:2px;background:var(--borda)}
+  .q-progress i.on{background:var(--teal)}
+  .q-title{padding:18px 22px 0}
+  .q-title h2{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+  .q-title p{font-size:13.5px;color:var(--ink-2);margin-top:6px}
+  .q-cards{display:flex;flex-direction:column;gap:10px;padding:18px 16px 0}
+  .qc{display:flex;align-items:center;gap:14px;background:var(--card);border:1.5px solid var(--borda);border-radius:16px;padding:17px 16px;text-align:left;box-shadow:var(--shadow);transition:all .15s var(--ease)}
+  .qc:hover{border-color:var(--teal);transform:translateY(-1px)}
+  .qc:active{transform:scale(.985)}
+  .qc.on{border-color:var(--teal);background:var(--tint-04);box-shadow:0 1px 2px rgba(0,98,117,.12),0 8px 20px -8px rgba(0,121,147,.28)}
+  .qc.ped.on{border-color:var(--info);background:var(--info-bg);box-shadow:0 1px 2px rgba(109,40,217,.12),0 8px 20px -8px rgba(109,40,217,.25)}
+  .qc .qi{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:19px;flex-shrink:0}
+  .qc .qt{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+  .qc .qs{font-size:12px;font-weight:400;color:var(--ink-3);margin-top:1px}
+  .qc .chk{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--borda);display:grid;place-items:center;font-size:11px;color:transparent;flex-shrink:0}
+  .qc.on .chk{background:var(--teal);border-color:var(--teal);color:#fff}
+  .qc.ped.on .chk{background:var(--info);border-color:var(--info)}
+  .q-hint{font-size:11.5px;color:var(--ink-3);text-align:center;margin-top:auto;padding:14px}
+
+  /* Ferramenta real (P4 demo) — anatomia tela-ferramenta canônica */
+  .tool-head{flex-shrink:0;background:var(--card);padding:8px 14px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--borda-sutil)}
+  .tool-head .bk{font-size:19px;color:var(--ink-2);width:30px}
+  .tool-head .tt{flex:1}
+  .tool-head .tt .a{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .tool-head .tt .b{font-size:11.5px;color:var(--ink-3)}
+  .tool-head .act{width:34px;height:34px;border-radius:50%;background:var(--elevado);display:grid;place-items:center;font-size:13px;color:var(--ink-2);position:relative}
+  .demo-pill{align-self:center;margin:10px 0 0;background:var(--navy);color:#fff;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 12px;border-radius:var(--pill)}
+  .tool-body{flex:1;overflow:hidden;padding:12px 16px;display:flex;flex-direction:column;gap:11px}
+  .oque{background:var(--info-bg);border:1px solid var(--info-bd);border-radius:var(--r);padding:11px 13px;font-size:12.5px;line-height:1.5}
+  .oque b{color:var(--info)}
+  .slabel{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);margin-top:3px}
+  .tchips{display:flex;gap:7px;flex-wrap:wrap}
+  .tchip{border:1px solid var(--borda);background:var(--card);font-size:12.5px;font-weight:500;padding:8px 13px;border-radius:var(--pill);transition:all .13s var(--ease)}
+  .tchip.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+  .result{background:var(--ok-bg);border:1px solid var(--ok-bd);border-radius:var(--r);padding:12px 15px;display:flex;align-items:baseline;gap:9px}
+  .result .n{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--ok)}
+  .result .c{font-size:13.5px;font-weight:700;color:var(--ok)}
+  .result .h{font-size:10.5px;color:var(--ink-3);margin-left:auto}
+  .tool-cta{margin:0 16px 18px;height:52px;border-radius:var(--r);background:var(--teal);color:#fff;font-size:15.5px;font-weight:700}
+
+  /* Tooltip pull-revelation */
+  .tip{position:absolute;top:118px;right:14px;z-index:8;width:225px;background:var(--navy);color:#fff;border-radius:10px;padding:11px 13px;font-size:12px;line-height:1.5;box-shadow:0 12px 32px rgba(13,27,42,.35)}
+  .tip::before{content:"";position:absolute;top:-5px;right:26px;width:10px;height:10px;background:var(--navy);transform:rotate(45deg)}
+  .tip b{color:var(--cyan)}
+  .tip .ok-b{margin-top:8px;background:rgba(255,255,255,.14);color:#fff;font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:6px}
+  .ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--cyan);animation:pulse 1.6s infinite}
+  @keyframes pulse{0%{transform:scale(.88);opacity:1}70%{transform:scale(1.22);opacity:0}100%{opacity:0}}
+
+  /* Cadastro */
+  .signup{justify-content:center;padding:0 26px;display:flex;flex-direction:column;background:var(--page)}
+  .signup .word{text-align:center;font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--logo);margin-bottom:24px}
+  .signup .word b{color:var(--teal)}
+  .signup h2{font-size:24px;font-weight:800;letter-spacing:-.02em;text-align:center}
+  .signup p{font-size:13.5px;color:var(--ink-2);text-align:center;margin-top:7px;line-height:1.5}
+  .signup .btns{display:flex;flex-direction:column;gap:10px;margin-top:26px}
+  .signup .b1{height:52px;border-radius:14px;background:var(--teal);color:#fff;font-size:16px;font-weight:700;box-shadow:0 1px 2px rgba(0,98,117,.3),0 6px 16px -6px rgba(0,121,147,.4);transition:all .16s var(--ease)}
+  .signup .b1:hover{background:var(--teal-hover)} .signup .b1:active{transform:scale(.98)}
+  .signup .b2{height:52px;border-radius:14px;border:1px solid var(--borda);background:var(--card);color:var(--ink);font-size:16px;font-weight:600;transition:all .16s var(--ease)}
+  .signup .b2:hover{border-color:var(--ink-3)} .signup .b2:active{transform:scale(.98)}
+  .signup .legal{font-size:11px;color:var(--ink-3);text-align:center;margin-top:14px;line-height:1.5}
+  .signup .ctx{margin-top:16px;background:var(--tint-04);border:1px solid rgba(0,121,147,.18);border-radius:10px;padding:10px 13px;font-size:12px;color:var(--ink-2);text-align:center}
+  .signup .ctx b{color:var(--teal)}
+
+  .splash{align-items:center;justify-content:center;background:linear-gradient(165deg,var(--navy),#0E3A4A);display:flex}
+  .splash .lg{font-size:32px;font-weight:800;letter-spacing:-.02em;color:#fff}
+  .splash .lg b{color:var(--cyan)}
+  .splash .tg{font-size:13px;color:rgba(255,255,255,.6);margin-top:6px;text-align:center}
+
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:var(--r-sheet) var(--r-sheet) 0 0;box-shadow:0 -8px 24px -8px rgba(15,23,42,.15);padding:10px 20px 24px;z-index:9}
+  .sheet .hd{width:36px;height:4px;border-radius:2px;background:var(--borda);margin:0 auto 14px}
+  .sheet h3{font-size:18px;font-weight:800;letter-spacing:-.01em}
+  .sheet p{font-size:13px;color:var(--ink-2);margin-top:5px;line-height:1.5}
+  .scrim{position:absolute;inset:0;background:rgba(15,23,42,.5);z-index:8}
+
+  /* ================= Estratégia ================= */
+  section.strategy{padding:34px 0 20px;background:var(--card);border-top:1px solid var(--borda)}
+  section.strategy h2{font-size:22px;letter-spacing:-.015em;margin-top:12px}
+  section.strategy .sub{color:var(--ink-2);font-size:13.5px;max-width:86ch;margin-top:6px}
+  .verdict{margin-top:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:900px){.verdict{grid-template-columns:1fr}}
+  .v-card{border-radius:var(--r);padding:15px 17px;border:1px solid var(--borda)}
+  .v-card.a{background:var(--ok-bg);border-color:var(--ok-bd)}
+  .v-card.b{background:var(--tint-04);border-color:rgba(0,121,147,.25)}
+  .v-card.c{background:var(--crit-bg);border-color:var(--crit-bd)}
+  .v-card .h{font-size:13px;font-weight:800;letter-spacing:-.01em}
+  .v-card.a .h{color:var(--ok)} .v-card.b .h{color:var(--teal)} .v-card.c .h{color:var(--crit)}
+  .v-card p{font-size:12.5px;color:var(--ink-2);margin-top:5px;line-height:1.55}
+
+  .ftable{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;margin-top:20px;border:1px solid var(--borda);border-radius:var(--r);overflow:hidden}
+  .ftable th,.ftable td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--borda-sutil);vertical-align:top}
+  .ftable thead th{background:var(--elevado);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+  .ftable tbody tr:last-child td{border-bottom:none}
+  .ftable td:first-child{font-weight:700;white-space:nowrap}
+  .ftable .dev{font-weight:600;color:var(--teal)}
+  .ftable .nada{color:var(--ink-3);font-weight:600}
+  .ftable .st{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--pill);white-space:nowrap}
+  .st-ja{background:var(--ok-bg);color:var(--ok)} .st-new{background:var(--warn-bg);color:var(--warn)} .st-no{background:var(--elevado);color:var(--ink-3)}
+  .scroll{overflow-x:auto}
+
+  footer.lab{padding:22px 0 56px;background:var(--card)}
+  .next{background:var(--tint-04);border:1px solid rgba(0,121,147,.2);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.65;color:var(--ink-2);max-width:800px}
+  .next b{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="lab">
+  <div class="wrap">
+    <span class="kicker">Protótipo · Discovery de Onboarding · v2</span>
+    <h1>Onboarding Lab</h1>
+    <p class="lede">4 propostas na linguagem visual real do app (Home, Modo PCR e anatomia de ferramenta recriados 1:1). Anatomia do carrossel segue o benchmark Clime/Retro: frame + título abaixo + CTA cheio + dots. Assets em âmbar são os prints que você gera.</p>
+    <div class="meta">
+      <span><b>Refs estudadas em imagem:</b> Clime, Foodllama, Waterllama, Ahead + Home real do CalcMed</span>
+      <span><b>Regra viva:</b> cadastro nunca antes do valor</span>
+      <span><b>Atualizado:</b> 2026-07-05</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap selector">
+  <div class="selector-label">Proposta ativa · clique pra trocar</div>
+  <div class="props" id="props"></div>
+</div>
+
+<div class="wrap workspace">
+  <aside class="panel panel-rationale" id="rationale"></aside>
+  <div class="phone-col">
+    <div class="phone" id="phone"></div>
+    <div class="frame-controls">
+      <button class="nav-btn" id="prev" aria-label="Anterior">&#8592;</button>
+      <div class="dots" id="dots"></div>
+      <button class="nav-btn" id="next" aria-label="Próximo">&#8594;</button>
+    </div>
+    <span class="frame-hint">Setas do teclado navegam. Chips e cards com hover teal são clicáveis.</span>
+  </div>
+  <aside class="panel panel-spec" id="spec"></aside>
+</div>
+
+<section class="strategy">
+  <div class="wrap">
+    <span class="kicker">Estratégia · o que merece onboarding no CalcMed</span>
+    <h2>O app já se explica quase sozinho. O gap real é 1: o primeiro acesso.</h2>
+    <p class="sub">Análise funcionalidade a funcionalidade do app real. Conclusão em 3 tempos: (1) micro-onboarding quase todo JÁ está embutido no design atual, só precisa ser mantido como regra; (2) o único dispositivo novo aprovável é o tooltip por-aba; (3) o que NÃO existe e importa é o onboarding global do 1º acesso, que é exatamente o que as 4 propostas resolvem.</p>
+
+    <div class="verdict">
+      <div class="v-card a"><div class="h">Já resolvido pelo design (manter como regra)</div><p>Idle do Modo PCR instrui. Card "O que é" explica cada ferramenta. Empty states ensinam. Disclaimer da IA protege. Banner "Novo" (padrão Modo CAD) anuncia lançamento. A busca ensina no placeholder.</p></div>
+      <div class="v-card b"><div class="h">Vale criar (pouco e cirúrgico)</div><p>Onboarding global do 1º acesso (as 4 propostas). Tooltip pull-revelation 1x pro comportamento por-aba. E só. Cada dispositivo novo além disso precisa provar que o design da tela não resolve.</p></div>
+      <div class="v-card c"><div class="h">Não fazer</div><p>Tour multi-passo. Coach marks em série. Overlay em central com caso rodando. Checklist de setup gamificado. Mascote em contexto de dose. Perguntas de perfil que travam a entrada (padrão Whitebook).</p></div>
+    </div>
+
+    <div class="scroll">
+    <table class="ftable">
+      <thead><tr><th>Funcionalidade (real)</th><th>Precisa de onboarding?</th><th>Dispositivo</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Home / navegação</td><td class="nada">Não. Tiles + busca são auto-evidentes; padrão consolidado de app.</td><td class="nada">nenhum</td><td><span class="st st-no">n/a</span></td></tr>
+        <tr><td>Modo PCR</td><td>Não no momento agudo, NUNCA. O idle "Pronto para iniciar" já instrui a única ação.</td><td class="dev">Idle state + aba ACLS (teoria fora do evento)</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>Centrais SCA · AVC · Sepse · CAD</td><td>Não dentro do fluxo. Lançamento se anuncia na Home.</td><td class="dev">Banner "Novo" dismissível (padrão Modo CAD)</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>CalcMed IA</td><td>Sim, 1x: é gate de segurança, não tour.</td><td class="dev">IAOnboarding (sheet blocking, flag local)</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>Calculadoras · escores · condutas</td><td>Não. Anatomia única transfere o aprendizado entre ferramentas.</td><td class="dev">Card "O que é" (AlertCard info, canônico)</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>Anotação + avaliação por aba</td><td>Sim, 1x: comportamento genuinamente não óbvio (decisão 03/07).</td><td class="dev">Tooltip pull-revelation, dispara no 1º uso de tela multi-aba</td><td><span class="st st-new">novo no DS</span></td></tr>
+        <tr><td>Minha Home (Editar)</td><td>Discovery leve, sem overlay: o lápis "Editar" já é visível na seção.</td><td class="nada">nenhum novo; avaliar copy do estado default</td><td><span class="st st-no">observar</span></td></tr>
+        <tr><td>Escala de plantões</td><td>Não além do vazio.</td><td class="dev">Empty state com CTA (padrão EmptyState)</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>Anotações / Favoritos / Histórico</td><td>Não além do vazio.</td><td class="dev">Empty states que ensinam o gesto de origem</td><td><span class="st st-ja">já existe</span></td></tr>
+        <tr><td>Modo Pediatria</td><td>O próprio chrome roxo + segmented comunicam o modo.</td><td class="nada">nenhum</td><td><span class="st st-no">n/a</span></td></tr>
+        <tr><td><b>Primeiro acesso ao app</b></td><td><b>SIM. É o único buraco real: hoje não existe nada.</b></td><td class="dev">Uma das 4 propostas acima</td><td><span class="st st-new">decidir</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<footer class="lab">
+  <div class="wrap">
+    <div class="next"><b>Depois da escolha:</b> travar proposta (ou híbrido) &rarr; assets reais (prints 2x/3x light) &rarr; ADR no discovery &rarr; spec Figma/Flutter. Componentes DS novos no pior caso: Tooltip pull-revelation (aprovado pela análise) e nada mais; banner, segmented, sheet, empty state e carrossel de prints já têm base no DS.</div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================ */
+const PROPOSALS = [
+  {
+    id:'vitrine', n:'Proposta 1', title:'Vitrine',
+    tagline:'Frente-07 no molde Clime: 6 passos, 4 pilares de valor (emergência, dose, dúvida, organização).',
+    badges:[['6 passos','warn'],['4 assets','warn'],['dev ~1 dia','ok']],
+    rationale:{
+      mecanismo:'Spoiler do produto real. Frame de device com print do app, título embaixo, CTA cheio, dots. Anatomia do benchmark Clime. Cada passo é um pilar distinto: emergência (PCR), dia-a-dia (noradrenalina), dúvida (IA), organização (home + escala fundidas em 1 print).',
+      valor:'Valor percebido em ~20s de swipe. Valor real depois do cadastro. Evidência da nora: é a 2ª ferramenta mais usada na própria Home ("Mais usadas da semana").',
+      assets:'4 prints: Modo PCR + Noradrenalina (taxa calculada) + chat IA + Home com escala visível. Mini-telas no frame são placeholders fiéis.',
+      risco:'Baixo. Zero componente novo. 6 passos é o teto: acima disso a conclusão despenca; "Pular" sempre visível.',
+      escolha:'Escolha se: quer contar a história completa do produto (4 pilares) na entrada, aceitando 2 passos a mais que o mínimo.',
+      referencia:'Clime (anatomia frame+título+CTA+dots), Retro, frente-07 (fusão Escala+Home que ela mesma sugeria). Chameleon: conclusão cai forte depois de 3-4 passos, por isso 6 é teto, não meta.'
+    },
+    steps:[
+      {name:'Abertura', spec:['Gradiente da marca (navy para teal), único passo sem frame','Wordmark grande no centro do palco','Título 1 linha + subtítulo 2 linhas, centrados (molde Clime)','CTA cheio branco "Começar" + ghost "Já tenho conta"','Pular no topo direito, onda de ECG como textura'], copy:{t:'Feito pro plantão.', s:'Decisão rápida e segura na urgência e emergência, na palma da mão.'}, asset:null},
+      {name:'Central de Urgência', spec:['Frame de device central com print do Modo PCR','Mini-tela placeholder recriada do app real (header + coração + Iniciar PCR)','Título e subtítulo ABAIXO do frame, centrados','CTA "Continuar" cheio + dots'], copy:{t:'PCR sem perder um segundo.', s:'Cronômetro, ciclos e doses na tela. Conduta guiada do início ao desfecho.'}, asset:'Print real: Modo PCR (tela idle "Pronto para iniciar" ou T2 rodando com cronômetro). Export 2x/3x light.'},
+      {name:'Dose · Noradrenalina', spec:['O pilar dia-a-dia: dose vasoativa com taxa pronta','Mini-tela com peso, dose e taxa de infusão calculada (26,3 mL/h)','Valores clinicamente verossímeis: 4 mg/250 mL, 16 µg/mL, 70 kg, 0,1 µg/kg/min','Linha "Copiar preparo" visível: o gesto de valor do app'], copy:{t:'A dose certa, já diluída.', s:'Peso e dose: taxa de infusão e preparo prontos pra copiar.'}, asset:'Print real: tela da Noradrenalina com peso preenchido e taxa calculada. Validar valores do print com Gustavo (Q7).'},
+      {name:'CalcMed IA', spec:['Mesma anatomia','Frame com chat: pergunta clínica verossímil + resposta com fonte'], copy:{t:'Dúvida clínica, resposta na hora.', s:'Pergunte como falaria com um colega. Resposta com fonte, direto no plantão.'}, asset:'Print real: chat IA com "Dose de ceftriaxona na PAC?" e resposta com referência visível.'},
+      {name:'Home + Escala', spec:['Funde Home personalizada e Escala num print só (fusão da frente-07)','Mini-tela com "Mais usadas da semana" + "Escala da semana"','Comunica: o app é do SEU plantão, não um catálogo'], copy:{t:'Seu plantão, organizado.', s:'Home personalizada, escala da semana e o que você mais usa, junto.'}, asset:'Print real: Home logada com Minha Home + Escala da semana visíveis no mesmo enquadramento.'},
+      {name:'Cadastro', spec:['Fundo light: transição do gradiente pro app real','Criar conta (teal) + Já tenho conta (outline)','Microcopy de esforço: e-mail e CPF, menos de 1 minuto','Sem paywall aqui: conversão vive no funil do Filipe'], copy:{t:'Pronto pro próximo plantão?', s:'Crie sua conta em menos de 1 minuto. E-mail e CPF.'}, asset:null}
+    ]
+  },
+  {
+    id:'vitrineperfil', n:'Proposta 2', title:'Vitrine + Perfil',
+    tagline:'Vitrine curta + 1 pergunta única: Adulto ou Pediatria. O eixo REAL do app.',
+    badges:[['5 passos','ok'],['2 assets','warn'],['home já no modo certo','ok']],
+    rationale:{
+      mecanismo:'Vitrine enxuta + progressive profiling mínimo: UMA pergunta de 1 toque, usando o eixo de personalização que o app JÁ TEM (segmented Adulto/Pediatria da Home + modo-pediatrico do DS). A resposta define o modo inicial. Pra ficar em 5 passos, o passo de IA sai (a IA se apresenta depois, no próprio IAOnboarding que já existe).',
+      valor:'PCR + dose no swipe, e a Home nasce configurada. Pediatria com chrome roxo desde o 1º segundo.',
+      assets:'2 prints: Modo PCR + Noradrenalina. A pergunta é UI pura (cards padrão DS, seleção teal/roxa).',
+      risco:'Baixo. A pergunta escreve num estado que o app já possui (modo). Sem Home dinâmica nova.',
+      escolha:'Escolha se: quer personalização de verdade sem inventar sistema novo, mantendo 5 passos. Troca o pilar IA pelo pilar contexto.',
+      referencia:'Foodllama/Duolingo (1 decisão por tela, card grande com check), Blinkist (personalização visível), eixo Adulto×Pediatria real (contrato PCR 2). IA dispensada do carrossel: ela tem onboarding próprio no 1º uso (IAOnboarding.jsx).'
+    },
+    steps:[
+      {name:'Abertura', spec:['Idêntica à Vitrine (gradiente + wordmark + CTA)'], copy:{t:'Feito pro plantão.', s:'Decisão rápida e segura na urgência e emergência, na palma da mão.'}, asset:null},
+      {name:'Central de Urgência', spec:['Idêntica à Vitrine (frame + print PCR)'], copy:{t:'PCR sem perder um segundo.', s:'Cronômetro, ciclos e doses na tela. Conduta guiada do início ao desfecho.'}, asset:'Print real: Modo PCR. Mesmo asset da Vitrine.'},
+      {name:'Pergunta única', spec:['Molde Foodllama na língua do DS: título grande + cards altos + check','3 opções, 1 toque, auto-avança (sem botão continuar)','Pediatria seleciona em ROXO (modo-pediatrico do DS)','Resposta define o segmented inicial da Home','Pular não penaliza: default Adulto'], copy:{t:'Como é seu plantão?', s:'A Home já abre no modo certo pra você.'}, asset:null},
+      {name:'Dose · Noradrenalina', spec:['Idêntica à Vitrine (frame + print da nora)','Se a resposta foi Pediatria, versão futura pode trocar o exemplo por dose ped'], copy:{t:'A dose certa, já diluída.', s:'Peso e dose: taxa de infusão e preparo prontos pra copiar.'}, asset:'Print real: Noradrenalina. Mesmo asset da Vitrine.'},
+      {name:'Cadastro', spec:['Igual à Vitrine + card de contexto mostrando o modo escolhido','Perfil segue junto no cadastro (nada se perde)'], copy:{t:'Pronto pro próximo plantão?', s:'Crie sua conta em menos de 1 minuto. E-mail e CPF.'}, asset:null}
+    ]
+  },
+  {
+    id:'homeguiada', n:'Proposta 3', title:'Home guiada',
+    tagline:'Zero carrossel. Splash, Home real e boas-vindas no padrão de banner que o app JÁ tem.',
+    badges:[['3 passos','ok'],['0 assets','ok'],['reusa banner do app','ok']],
+    rationale:{
+      mecanismo:'O app é o onboarding. O banner dismissível que a Home JÁ USA pro "Novo Modo CAD" vira o banner de boas-vindas com 2 atalhos. Tooltip 1x aponta o Editar da Minha Home. Cadastro adiado pra 1ª ação que precisa de conta.',
+      valor:'~5s até a busca. Nada entre o médico e a primeira ferramenta.',
+      assets:'Zero. Tudo é UI que já existe (banner, home, sheet). Único componente novo: tooltip.',
+      risco:'Risco de produto, não de prazo: sem momento de marca, e cadastro adiado é decisão de negócio (anônimo até quando?). Tecnicamente é o mais barato depois da Vitrine.',
+      escolha:'Escolha se: TTV é a convicção máxima e o time aceita repensar o gate de cadastro. Também é o "chão" honesto pra comparar as outras.',
+      referencia:'NN/g "skip when possible", UpToDate (régua médica: zero onboarding), pull revelations. Fundamentada no padrão de banner REAL da Home (screenshot 2026-07-05).'
+    },
+    steps:[
+      {name:'Splash', spec:['1 segundo, wordmark + tagline, preload da Home','Único momento de marca da proposta'], copy:{t:'CalcMed', s:'Feito pro plantão.'}, asset:null},
+      {name:'Home + boas-vindas', spec:['HOME REAL recriada 1:1 (header, segmented, busca, PCR card, tiles)','Banner de boas-vindas NO LUGAR do banner "Novo Modo CAD"','2 atalhos no banner: Modo PCR e Buscar ferramenta','X fecha pra sempre (mesma mecânica do banner atual)'], copy:{t:'Bem-vindo ao CalcMed', s:'Comece pelo que o plantão pede agora.'}, asset:null},
+      {name:'Soft gate', spec:['Cadastro SÓ na 1ª ação que exige conta (favoritar, anotar, escala)','BottomSheet no padrão DS (InfoSheet)','"Agora não" devolve pro app sem punição'], copy:{t:'Pra salvar, crie sua conta', s:'Favoritos, anotações e histórico ficam guardados com você. Menos de 1 minuto.'}, asset:null}
+    ]
+  },
+  {
+    id:'demoviva', n:'Proposta 4', title:'Demo viva',
+    tagline:'A 1ª tela é uma ferramenta REAL na anatomia canônica. Glasgow funcional antes do cadastro.',
+    badges:[['3 passos','ok'],['0 assets','ok'],['aha real na tela 1','warn']],
+    rationale:{
+      mecanismo:'Onboarding É o produto: a 1ª tela é a tela-ferramenta canônica (header calc + card O que é + SectionLabel + chips + resultado) com Glasgow funcional. Pill "modo demonstração" deixa honesto. Ninguém no mercado médico BR faz demo pré-cadastro.',
+      valor:'Aha REAL (calculou um escore) em ~10s, antes de qualquer cadastro.',
+      assets:'Zero. A demo É a ferramenta real simplificada, na anatomia oficial.',
+      risco:'Exige 1 tela funcional a mais em Flutter e curadoria clínica do exemplo (Glasgow é seguro: escore educacional, sem dose). Clinical safety: valores verossímeis sempre.',
+      escolha:'Escolha se: diferenciação máxima importa mais que 1 dia extra de dev, e a tese "sentir > ver" convence você e o Gustavo.',
+      referencia:'Calm (1ª tela entrega o produto), Genially (demo pré-signup), Reforge (aha = ação-valor real, não view). Tela na anatomia canônica do CalcMed (anatomia-tela-ferramenta.md).'
+    },
+    steps:[
+      {name:'Demo Glasgow', spec:['Tela-ferramenta CANÔNICA: header calc + "O que é" + SectionLabels','Chips reais, resultado ao vivo (clique aqui no frame)','Pill "Demonstração · sem cadastro" no topo','Lápis e bookmark presentes mas neutros (anatomia fiel)','Pular no header pra quem quer ir direto'], copy:{t:'Glasgow', s:'Pill: Demonstração · toque nos valores, o escore sai na hora.'}, asset:null},
+      {name:'Amplitude', spec:['Grid de domínios REAL da Home (8 tiles, cores oficiais das tags)','Número de ferramentas por domínio','1 tela só: amplitude não vira carrossel'], copy:{t:'Isso foi 1 de 200+.', s:'Tudo no mesmo padrão da tela que você acabou de usar.'}, asset:null},
+      {name:'Cadastro', spec:['Igual às demais, copy amarra o que acabou de acontecer'], copy:{t:'Leve o CalcMed com você.', s:'Crie sua conta pra salvar favoritos e anotações. Menos de 1 minuto.'}, asset:null}
+    ]
+  }
+];
+
+/* ============ blocos reutilizáveis (linguagem real do app) ============ */
+const ecg='<svg class="ecg" viewBox="0 0 390 60" fill="none"><path d="M0 30 H80 L95 30 L105 8 L118 52 L130 30 H190 L205 30 L215 12 L228 48 L240 30 H300 L315 30 L325 10 L338 50 L350 30 H390" stroke="white" stroke-width="1.5"/></svg>';
+const sb=(light)=>`<div class="sb${light?'':''}"><span>9:41</span><span class="r">&#9679;&#9679;&#9679;</span></div>`;
+
+const miniPCR=`<div class="mini">
+  <div class="m-head"><div class="a">Modo PCR</div><div class="b">Aguardando início</div></div>
+  <div class="m-body">
+    <div class="heart">&#10084;</div>
+    <div class="big">Pronto para iniciar</div>
+    <div class="sub">Toque em <b>Iniciar PCR</b>: o cronômetro do caso começa e você registra o ritmo inicial.</div>
+    <div class="cta-t">Iniciar PCR</div>
+  </div></div>`;
+
+const miniIA=`<div class="mini">
+  <div class="m-head"><div class="a">CalcMed IA</div><div class="b">Sua dúvida, com fonte</div></div>
+  <div class="m-body" style="justify-content:flex-end;gap:6px">
+    <div class="bub-q">Dose de ceftriaxona na PAC?</div>
+    <div class="bub-a"><b>Ceftriaxona 1 a 2 g IV, 1x/dia.</b> Na PAC grave, associar azitromicina.<br><span class="src">Fonte: Diretriz Brasileira de PAC</span></div>
+    <div class="card" style="text-align:center;color:var(--ink-3)">Pergunte como falaria com um colega</div>
+  </div></div>`;
+
+const miniNora=`<div class="mini">
+  <div class="m-head"><div class="a">Noradrenalina</div><div class="b">Diluição padrão · 4 mg/250 mL</div></div>
+  <div class="m-body">
+    <div class="card"><b style="font-size:8.5px;color:var(--ink-3)">PESO DO PACIENTE</b><div style="font-size:12px;font-weight:700;margin-top:2px">70 kg</div></div>
+    <div class="card"><b style="font-size:8.5px;color:var(--ink-3)">DOSE</b><div style="font-size:12px;font-weight:700;margin-top:2px">0,1 µg/kg/min</div></div>
+    <div class="card" style="background:var(--ok-bg);border-color:var(--ok-bd)">
+      <b style="font-size:8.5px;color:var(--ok)">TAXA DE INFUSÃO</b>
+      <div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--ok);margin-top:2px">26,3 <span style="font-size:10px">mL/h</span></div>
+      <div style="font-size:7.5px;color:var(--ink-3);margin-top:2px">16 µg/mL · bomba de infusão</div>
+    </div>
+    <div class="cta-t" style="background:var(--card);color:var(--teal);border:1px solid var(--borda)">Copiar preparo</div>
+  </div></div>`;
+
+const miniHome=`<div class="mini">
+  <div class="m-head"><div class="a">Boa noite, Dr. Rafael</div><div class="b">Adulto · Home personalizada</div></div>
+  <div class="m-body" style="gap:6px">
+    <div class="card"><b style="font-size:8.5px">&#9889; Mais usadas da semana</b>
+      <div style="display:flex;justify-content:space-between;font-size:8.5px;margin-top:4px"><span>1 &nbsp;Sepse</span><span style="color:var(--ink-3)">12 acessos</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:8.5px;margin-top:3px"><span>2 &nbsp;Noradrenalina</span><span style="color:var(--ink-3)">9 acessos</span></div>
+    </div>
+    <div class="card"><b style="font-size:8.5px">&#9634; Escala da semana</b>
+      <div style="display:flex;gap:6px;font-size:8.5px;margin-top:4px"><b style="color:var(--teal)">Hoje</b><span>19h às 07h</span><span style="color:var(--ink-3)">UPA Jd. América</span></div>
+      <div style="display:flex;gap:6px;font-size:8.5px;margin-top:3px"><span style="color:var(--ink-3)">Sex, 12</span><span>19h às 07h</span><span style="color:var(--ink-3)">UPA Central</span></div>
+    </div>
+    <div class="card" style="text-align:center;color:var(--teal);font-weight:700;font-size:8.5px">Ver escala completa</div>
+  </div></div>`;
+
+const onbStep=(inner,assetFlag,h,p,cta,dotsHtml)=>`<div class="screen onb">
+  ${sb()}
+  <button class="skip">Pular</button>
+  <div class="onb-stage"><div class="onb-frame">${assetFlag?`<span class="asset-flag">Asset · print real aqui</span>`:''}<div class="inner">${inner}</div></div></div>
+  <div class="onb-caption"><h2>${h}</h2><p>${p}</p></div>
+  <div class="onb-foot"><button class="cta">${cta}</button><div class="mini-dots">${dotsHtml}</div></div>
+</div>`;
+
+const opener=(dotsHtml)=>`<div class="screen onb opener">
+  ${sb()}${ecg}
+  <button class="skip" style="background:rgba(255,255,255,.12);color:rgba(255,255,255,.9)">Pular</button>
+  <div class="onb-stage"><div class="word"><span class="pulse">&#10084;</span>Calc<b>Med</b></div></div>
+  <div class="onb-caption"><h2>Feito pro plantão.</h2><p>Decisão rápida e segura na urgência e emergência, na palma da mão.</p></div>
+  <div class="onb-foot"><button class="cta">Começar</button><button class="ghost">Já tenho conta</button><div class="mini-dots">${dotsHtml}</div></div>
+</div>`;
+
+const signup=(h,p,ctx,dotsHtml)=>`<div class="screen signup">
+  ${sb()}
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div class="word">Calc<b>Med</b></div>
+    <h2>${h}</h2><p>${p}</p>
+    <div class="btns"><button class="b1">Criar conta</button><button class="b2">Já tenho conta</button></div>
+    ${ctx?`<div class="ctx">${ctx}</div>`:''}
+    <div class="legal">Ao continuar, você concorda com os Termos de Uso<br>e a Política de Privacidade.</div>
+  </div>
+  <div style="padding:0 0 26px;display:flex;justify-content:center"><div class="mini-dots">${dotsHtml||''}</div></div>
+</div>`;
+
+function dots(n,on){let s='';for(let i=0;i<n;i++)s+=`<i class="${i===on?'on':''}"></i>`;return s}
+
+/* Home real recriada (usada na P3) */
+function homeReal({banner,tipEdit}){
+  return `<div class="screen" style="background:var(--page)">
+  ${sb()}
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="home-head">
+      <div class="av">RF</div>
+      <div class="hi"><div class="s">Boa noite,</div><div class="n">Dr. Rafael</div></div>
+      <div class="ic">&#9788;</div><div class="ic">&#128276;</div>
+    </div>
+    <div class="seg"><button class="on">Adulto</button><button>&#9678; Pediatria</button></div>
+    <div class="search"><span>&#9906;</span><span class="ph">Busque ou pergunte à IA</span><span class="ia">&#10022; IA</span></div>
+    ${banner||''}
+    <div class="h-sec">Central de Urgência</div>
+    <div class="chips-row"><span class="cchip on">PCR</span><span class="cchip">SCA</span><span class="cchip">AVC</span><span class="cchip">Sepse</span><span class="cchip">CAD</span></div>
+    <div class="pcr-card"><div class="hp">&#10084;</div><div class="tt"><div class="a">Modo PCR</div><div class="b">Guiada em tempo real</div></div><button class="go">Iniciar</button></div>
+    <div class="tiles">
+      <div class="tile"><div class="ti" style="background:var(--t-cond-bg);color:var(--t-cond)">&#9881;</div><div class="tl">Condutas</div></div>
+      <div class="tile"><div class="ti" style="background:var(--t-urg-bg);color:var(--t-urg)">&#9888;</div><div class="tl">Urgências</div></div>
+      <div class="tile"><div class="ti" style="background:var(--t-dil-bg);color:var(--t-dil)">&#9701;</div><div class="tl">Diluições</div></div>
+      <div class="tile"><div class="ti" style="background:var(--t-esc-bg);color:var(--t-esc)">&#9636;</div><div class="tl">Escores</div></div>
+    </div>
+    <div class="mh-head"><div class="t">Minha Home</div><div class="edit">${tipEdit?'<span class="ring"></span>':''}&#9998; Editar</div></div>
+    ${tipEdit?`<div class="tip" style="top:auto;bottom:190px;right:14px"><b>Sua home é sua.</b> Fixe as ferramentas que o seu plantão mais usa.<br><button class="ok-b">Entendi</button></div>`:''}
+    <div class="mh-card"><div class="h">&#9889; Mais usadas da semana</div>
+      <div class="li"><span>1 &nbsp;Sepse</span><span class="r">12 acessos</span></div>
+      <div class="li"><span>2 &nbsp;Noradrenalina</span><span class="r">9 acessos</span></div>
+    </div>
+  </div>
+  <div class="tabbar">
+    <div class="tb on"><span class="i">&#8962;</span>Início</div>
+    <div class="tb"><span class="i">&#9906;</span>Busca</div>
+    <div class="tb"><span class="i">&#9634;</span>Escala</div>
+    <div class="tb"><span class="i">&#10022;</span>IA</div>
+    <div class="tb"><span class="i">&#9776;</span>Menu</div>
+  </div>
+</div>`;
+}
+
+/* ============ renderers ============ */
+function rVitrine(s){
+  if(s===0) return opener(dots(6,0));
+  if(s===1) return onbStep(miniPCR,true,'PCR sem perder um segundo.','Cronômetro, ciclos e doses na tela. Conduta guiada do início ao desfecho.','Continuar',dots(6,1));
+  if(s===2) return onbStep(miniNora,true,'A dose certa, já diluída.','Peso e dose: taxa de infusão e preparo prontos pra copiar.','Continuar',dots(6,2));
+  if(s===3) return onbStep(miniIA,true,'Dúvida clínica, resposta na hora.','Pergunte como falaria com um colega. Resposta com fonte, direto no plantão.','Continuar',dots(6,3));
+  if(s===4) return onbStep(miniHome,true,'Seu plantão, organizado.','Home personalizada, escala da semana e o que você mais usa, junto.','Continuar',dots(6,4));
+  return signup('Pronto pro próximo plantão?','Crie sua conta em menos de 1 minuto. E-mail e CPF.',null,dots(6,5));
+}
+
+let perfilSel = null;
+function rVitrinePerfil(s){
+  if(s===0) return opener(dots(5,0));
+  if(s===1) return onbStep(miniPCR,true,'PCR sem perder um segundo.','Cronômetro, ciclos e doses na tela. Conduta guiada do início ao desfecho.','Continuar',dots(5,1));
+  if(s===3) return onbStep(miniNora,true,'A dose certa, já diluída.','Peso e dose: taxa de infusão e preparo prontos pra copiar.','Continuar',dots(5,3));
+  if(s===2){
+    const qc=(v,cls,icBg,icFg,ic,t,sd)=>`<button class="qc ${cls} ${perfilSel===v?'on':''}" data-perfil="${v}">
+      <div class="qi" style="background:${icBg};color:${icFg}">${ic}</div>
+      <div><div class="qt">${t}</div><div class="qs">${sd}</div></div><div class="chk">&#10003;</div></button>`;
+    return `<div class="screen onb">
+      ${sb()}
+      <button class="skip">Pular</button>
+      <div class="q-progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="q-title"><h2>Como é seu plantão?</h2><p>A Home já abre no modo certo pra você.</p></div>
+      <div class="q-cards">
+        ${qc('adulto','','var(--tint-08)','var(--teal)','&#9650;','Adulto','Urgência e emergência geral')}
+        ${qc('ped','ped','var(--info-bg)','var(--info)','&#9678;','Pediatria','Doses por peso, chrome roxo, PALS')}
+        ${qc('ambos','','var(--elevado)','var(--ink-2)','&#8644;','Os dois','Alterno entre adulto e pediatria')}
+      </div>
+      <div class="q-hint">1 toque avança. Dá pra trocar depois, direto na Home.</div>
+    </div>`;
+  }
+  const modo = perfilSel==='ped'?'Pediatria (chrome roxo)':perfilSel==='ambos'?'Adulto + Pediatria':'Adulto';
+  return signup('Pronto pro próximo plantão?','Crie sua conta em menos de 1 minuto. E-mail e CPF.',`Sua Home já nasce no modo <b>${modo}</b>.`,dots(5,4));
+}
+
+function rHomeGuiada(s){
+  if(s===0) return `<div class="screen splash"><div style="text-align:center"><div class="lg">Calc<b>Med</b></div><div class="tg">Feito pro plantão.</div></div></div>`;
+  if(s===1) return homeReal({banner:`<div class="banner"><button class="x">&#10005;</button><div class="eyebrow">Bem-vindo</div><div class="t">Bem-vindo ao CalcMed</div><div class="s">Comece pelo que o plantão pede agora.</div><div class="quick"><button>Modo PCR</button><button>Buscar ferramenta</button></div></div>`});
+  return `<div class="screen" style="background:var(--page)">
+    ${sb()}
+    <div style="flex:1;filter:blur(1.5px);overflow:hidden;display:flex;flex-direction:column">
+      <div class="home-head"><div class="av">RF</div><div class="hi"><div class="s">Boa noite,</div><div class="n">Dr. Rafael</div></div></div>
+      <div class="seg"><button class="on">Adulto</button><button>Pediatria</button></div>
+      <div class="search"><span>&#9906;</span><span class="ph">Busque ou pergunte à IA</span><span class="ia">&#10022; IA</span></div>
+      <div class="h-sec">Central de Urgência</div>
+      <div class="pcr-card"><div class="hp">&#10084;</div><div class="tt"><div class="a">Modo PCR</div><div class="b">Guiada em tempo real</div></div><button class="go">Iniciar</button></div>
+    </div>
+    <div class="scrim"></div>
+    <div class="sheet"><div class="hd"></div>
+      <h3>Pra salvar, crie sua conta</h3>
+      <p>Favoritos, anotações e histórico ficam guardados com você. Menos de 1 minuto.</p>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+        <button class="b1" style="height:52px;border-radius:var(--r);background:var(--teal);color:#fff;font-size:16px;font-weight:700">Criar conta</button>
+        <button class="b2" style="height:52px;border-radius:var(--r);border:1px solid var(--borda);background:transparent;font-size:16px;font-weight:600">Agora não</button>
+      </div></div>
+  </div>`;
+}
+
+let gcs={o:4,v:5,m:6};
+const gTotal=()=>gcs.o+gcs.v+gcs.m;
+const gClass=()=>{const t=gTotal();return t>=13?'Leve':t>=9?'Moderado':'Grave'};
+function rDemoViva(s){
+  if(s===0){
+    const ch=(g,v,l)=>`<button class="tchip ${gcs[g]===v?'on':''}" data-g="${g}" data-v="${v}">${l}</button>`;
+    return `<div class="screen" style="background:var(--page)">
+      ${sb()}
+      <div class="tool-head">
+        <div class="bk">&#8249;</div>
+        <div class="tt"><div class="a">Glasgow</div><div class="b">Escala de coma · adulto</div></div>
+        <div class="act">&#9998;</div><div class="act">&#9734;</div>
+      </div>
+      <span class="demo-pill">Demonstração · sem cadastro</span>
+      <div class="tool-body">
+        <div class="oque"><b>O que é:</b> escala que avalia nível de consciência por resposta ocular, verbal e motora. Some os três pontos.</div>
+        <div class="slabel">Resposta ocular</div>
+        <div class="tchips">${ch('o',4,'Espontânea · 4')}${ch('o',3,'À voz · 3')}${ch('o',2,'À dor · 2')}${ch('o',1,'Ausente · 1')}</div>
+        <div class="slabel">Resposta verbal</div>
+        <div class="tchips">${ch('v',5,'Orientado · 5')}${ch('v',4,'Confuso · 4')}${ch('v',3,'Palavras · 3')}</div>
+        <div class="slabel">Resposta motora</div>
+        <div class="tchips">${ch('m',6,'Obedece · 6')}${ch('m',5,'Localiza · 5')}${ch('m',4,'Retirada · 4')}</div>
+        <div class="result" style="margin-top:auto"><span class="n">${gTotal()}</span><span class="c">${gClass()}</span><span class="h">atualiza ao vivo</span></div>
+      </div>
+      <button class="tool-cta">Continuar</button>
+    </div>`;
+  }
+  if(s===1){
+    const tile=(bg,fg,ic,nm,ct)=>`<div class="tile" style="padding:14px 6px"><div class="ti" style="background:${bg};color:${fg}">${ic}</div><div class="tl" style="font-size:11px">${nm}</div><div style="font-size:9.5px;color:var(--ink-3)">${ct}</div></div>`;
+    return `<div class="screen" style="background:var(--page)">
+      ${sb()}
+      <div class="q-title" style="padding-top:26px"><h2>Isso foi 1 de 200+.</h2><p>Tudo no mesmo padrão da tela que você acabou de usar.</p></div>
+      <div class="tiles" style="grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px">
+        ${tile('var(--t-urg-bg)','var(--t-urg)','&#9888;','Urgências','5 centrais')}
+        ${tile('var(--t-calc-bg)','var(--t-calc)','&#9636;','Calculadoras','80+')}
+        ${tile('var(--t-esc-bg)','var(--t-esc)','&#9634;','Escores','60+')}
+        ${tile('var(--t-prot-bg)','var(--t-prot)','&#9881;','Protocolos','40+')}
+        ${tile('var(--t-dil-bg)','var(--t-dil)','&#9701;','Diluições','30+')}
+        ${tile('var(--t-chk-bg)','var(--t-chk)','&#10003;','Checklists','20+')}
+      </div>
+      <div style="margin-top:auto;padding:0 16px 22px;display:flex;flex-direction:column;gap:12px;align-items:center">
+        <button class="tool-cta" style="margin:0;width:100%">Continuar</button>
+        <div class="mini-dots"><i></i><i class="on"></i><i></i></div>
+      </div>
+    </div>`;
+  }
+  return signup('Leve o CalcMed com você.','Crie sua conta pra salvar favoritos e anotações. Menos de 1 minuto.',null,dots(3,2));
+}
+
+const RENDERERS={vitrine:rVitrine, vitrineperfil:rVitrinePerfil, homeguiada:rHomeGuiada, demoviva:rDemoViva};
+
+/* ============ estado ============ */
+let state={p:0,s:0};
+
+function renderProps(){
+  document.getElementById('props').innerHTML = PROPOSALS.map((p,i)=>`
+    <button class="prop ${i===state.p?'active':''}" data-i="${i}">
+      <span class="n">${p.n}</span><h3>${p.title}</h3><p>${p.tagline}</p>
+      <div class="badges">${p.badges.map(([b,c])=>`<span class="badge ${c}">${b}</span>`).join('')}</div>
+    </button>`).join('');
+}
+function renderRationale(){
+  const r=PROPOSALS[state.p].rationale;
+  document.getElementById('rationale').innerHTML=`
+    <h4>Racional</h4>
+    <div class="row"><span class="k">Mecanismo</span><span class="v">${r.mecanismo}</span></div>
+    <div class="row"><span class="k">Primeiro valor</span><span class="v dim">${r.valor}</span></div>
+    <div class="row"><span class="k">Assets</span><span class="v dim">${r.assets}</span></div>
+    <div class="row"><span class="k">Risco</span><span class="v dim">${r.risco}</span></div>
+    <div class="row"><span class="k">Quando escolher</span><span class="v dim">${r.escolha}</span></div>
+    <div class="row"><span class="k">Referências</span><span class="v dim" style="font-size:11.5px">${r.referencia}</span></div>`;
+}
+function renderSpec(){
+  const p=PROPOSALS[state.p],st=p.steps[state.s];
+  document.getElementById('spec').innerHTML=`
+    <h4>Passo ${state.s+1} de ${p.steps.length}</h4>
+    <div class="step-name">${st.name}</div>
+    <ul>${st.spec.map(x=>`<li>${x}</li>`).join('')}</ul>
+    <div class="copy-block"><span class="k">Copy exata</span><div class="t">${st.copy.t}</div><div class="s">${st.copy.s}</div></div>
+    ${st.asset?`<div class="asset-note"><b>Asset pendente:</b> ${st.asset}</div>`:`<div class="asset-note none"><b>Sem asset.</b> Tela 100% UI.</div>`}`;
+}
+function renderPhone(){
+  const p=PROPOSALS[state.p];
+  const el=document.getElementById('phone');
+  el.innerHTML=RENDERERS[p.id](state.s);
+  el.querySelector('.screen').classList.add('active');
+  bind();
+}
+function renderDots(){
+  const p=PROPOSALS[state.p];
+  document.getElementById('dots').innerHTML=p.steps.map((_,i)=>`<button class="dot ${i===state.s?'on':''}" data-s="${i}"></button>`).join('');
+  document.getElementById('prev').disabled=state.s===0;
+  document.getElementById('next').disabled=state.s===p.steps.length-1;
+}
+function renderAll(){renderProps();renderRationale();renderSpec();renderPhone();renderDots()}
+function go(s){
+  const max=PROPOSALS[state.p].steps.length-1;
+  state.s=Math.max(0,Math.min(max,s));
+  renderSpec();renderPhone();renderDots();
+}
+function bind(){
+  document.querySelectorAll('#phone .tchip[data-g]').forEach(c=>c.addEventListener('click',()=>{gcs[c.dataset.g]=Number(c.dataset.v);renderPhone()}));
+  document.querySelectorAll('#phone .qc[data-perfil]').forEach(q=>q.addEventListener('click',()=>{perfilSel=q.dataset.perfil;renderPhone();setTimeout(()=>go(state.s+1),420)}));
+}
+document.getElementById('props').addEventListener('click',e=>{const b=e.target.closest('.prop');if(!b)return;state.p=Number(b.dataset.i);state.s=0;renderAll()});
+document.getElementById('prev').addEventListener('click',()=>go(state.s-1));
+document.getElementById('next').addEventListener('click',()=>go(state.s+1));
+document.getElementById('dots').addEventListener('click',e=>{const d=e.target.closest('.dot');if(d)go(Number(d.dataset.s))});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(state.s+1);if(e.key==='ArrowLeft')go(state.s-1)});
+renderAll();
+</script>
+</body>
+</html>

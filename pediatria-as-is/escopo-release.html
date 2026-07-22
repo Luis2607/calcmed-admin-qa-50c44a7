@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Escopo &amp; Tasks · Release 2.0 — CalcMed</title>
+<style>
+:root{
+  --navy:#0e2a47;--navy2:#16395f;--teal:#1f9e8f;--teal-d:#147c70;--teal-l:#e9f6f4;
+  --line:#dde5ee;--line2:#eef3f8;--bg:#f4f7fb;--mut:#5b6b7a;--ink:#13212e;
+  --todo:#9aa7b4;--doing:#378add;--done:#1d9e75;--blocked:#d8772f;--card:#fff;
+  --sh:0 1px 2px rgba(14,42,71,.05),0 1px 3px rgba(14,42,71,.04);
+}
+*{box-sizing:border-box}html,body{margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:64px;-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#0e2a47,#0c2440);color:#fff;padding:13px 22px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;box-shadow:0 1px 0 rgba(255,255,255,.05),0 6px 20px rgba(8,24,42,.18)}
+header .logo{width:28px;height:28px;border-radius:8px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0;box-shadow:0 2px 8px rgba(31,158,143,.4)}
+header b{font-size:15px}header .sub{font-size:12px;color:#9ec7ff}
+header .who{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12px;color:#cfe0f0}
+header .who input{background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;width:120px;outline:none}
+header .who input:focus{border-color:var(--teal);background:rgba(255,255,255,.16)}
+header .who input::placeholder{color:#9ec7ff}
+.cloud{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700;letter-spacing:.2px}
+.cloud.on{background:rgba(29,158,117,.22);color:#7df0cf}.cloud.off{background:rgba(255,255,255,.12);color:#cfe0f0}
+.wrap{max-width:940px;margin:0 auto;padding:18px 20px}
+
+.overall{background:var(--card);border:0.5px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:14px;box-shadow:var(--sh)}
+.overall .top{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.overall h1{font-size:16px;color:var(--navy);margin:0;font-weight:800}
+.overall .pct{margin-left:auto;font-size:26px;font-weight:800;color:var(--teal-d);font-feature-settings:'tnum';letter-spacing:-.5px}
+.overall .pct small{font-size:12px;color:var(--mut);font-weight:600;margin-left:2px}
+.bar{height:10px;border-radius:7px;background:#eef3f8;border:0.5px solid var(--line);overflow:hidden;display:flex}
+.bar>span{height:100%;transition:width .45s cubic-bezier(.4,0,.2,1)}
+.bar .s-done{background:linear-gradient(180deg,#23ad82,#1d9e75)}.bar .s-doing{background:linear-gradient(180deg,#4895e3,#378add)}.bar .s-blocked{background:linear-gradient(180deg,#e0823b,#d8772f)}
+.tally{display:flex;gap:16px;margin-top:11px;font-size:12px;color:var(--mut);flex-wrap:wrap}
+.tally b{font-feature-settings:'tnum';color:var(--ink)}
+.tally .sub-tally{margin-left:auto;font-size:11.5px;color:var(--teal-d);font-weight:600}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:0;margin-right:5px}
+
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.filters button{font-size:12px;padding:6px 12px;border:0.5px solid var(--line);border-radius:20px;background:#fff;color:var(--mut);cursor:pointer;font-weight:600;transition:all .12s}
+.filters button:hover{border-color:#c3d2e2}
+.filters button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.filters .expander{margin-left:auto;background:#fff;border:0.5px solid var(--line);color:var(--teal-d);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+.filters .expander:hover{border-color:var(--teal)}
+.searchbox{margin:0 0 16px;position:relative}
+.searchbox input{width:100%;border:0.5px solid var(--line);border-radius:11px;padding:10px 14px 10px 36px;font-size:13.5px;color:var(--ink);background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='none' stroke='%235b6b7a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'><circle cx='11' cy='11' r='8'/><path d='m21 21-4.3-4.3'/></svg>") no-repeat 13px center;outline:none;box-shadow:var(--sh)}
+.searchbox input:focus{border-color:var(--teal)}
+
+.grp{margin-bottom:16px}
+.grp-head{display:flex;align-items:center;gap:10px;margin:0 2px 8px}
+.grp-head h2{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--navy2);font-weight:800;margin:0;flex-shrink:0}
+.grp-head .gbar{flex:1;height:6px;border-radius:5px;background:#e7eef6;overflow:hidden;min-width:40px}
+.grp-head .gbar>span{display:block;height:100%;background:linear-gradient(90deg,#23ad82,#1f9e8f);transition:width .45s cubic-bezier(.4,0,.2,1)}
+.grp-head .gc{font-size:11px;color:var(--mut);font-weight:700;background:#eef3f8;border-radius:20px;padding:2px 9px;flex-shrink:0;font-feature-settings:'tnum'}
+
+.item{background:var(--card);border:0.5px solid var(--line);border-radius:12px;margin-bottom:8px;box-shadow:var(--sh);overflow:hidden;transition:border-color .15s}
+.item.open{border-color:#c9d8e8}
+.item.done .it-title{opacity:.6}
+.it-row{padding:11px 13px;display:flex;align-items:flex-start;gap:11px;cursor:pointer}
+.it-row:hover{background:#fafcfe}
+.pill{flex-shrink:0;font-size:11px;font-weight:700;border-radius:8px;padding:5px 10px;cursor:pointer;border:0.5px solid transparent;white-space:nowrap;min-width:78px;text-align:center;user-select:none;transition:transform .08s}
+.pill:active{transform:scale(.94)}
+.pill.todo{background:#eef1f4;color:#5b6b7a}
+.pill.doing{background:rgba(55,138,221,.14);color:#2766a8;border-color:rgba(55,138,221,.3)}
+.pill.done{background:rgba(29,158,117,.16);color:#147c70;border-color:rgba(29,158,117,.3)}
+.pill.blocked{background:rgba(216,119,47,.16);color:#a85a1c;border-color:rgba(216,119,47,.3)}
+.it-body{flex:1;min-width:0}
+.it-titrow{display:flex;align-items:center;gap:8px}
+.it-title{font-size:13.5px;line-height:1.4;color:var(--ink);font-weight:600}
+.it-chev{flex-shrink:0;color:#9aa7b4;transition:transform .2s;font-size:11px;margin-top:1px}
+.item.open .it-chev{transform:rotate(90deg);color:var(--teal-d)}
+.it-subcount{flex-shrink:0;font-size:10.5px;font-weight:700;color:var(--teal-d);background:var(--teal-l);border:0.5px solid rgba(31,158,143,.2);border-radius:20px;padding:1px 7px;font-feature-settings:'tnum'}
+.it-meta{margin-top:5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--mut)}
+.resp{cursor:pointer;border:0.5px dashed var(--line);border-radius:7px;padding:2px 8px;color:var(--teal-d)}
+.resp:hover{border-color:var(--teal)}
+.resp.set{border-style:solid;border-color:rgba(31,158,143,.4);background:rgba(31,158,143,.07)}
+.it-mini{flex:1;height:4px;border-radius:4px;background:#e7eef6;overflow:hidden;min-width:40px;max-width:140px}
+.it-mini>span{display:block;height:100%;background:var(--teal);transition:width .35s}
+
+.it-detail{display:none;padding:0 13px 12px 13px;border-top:0.5px solid var(--line2);background:#fbfdfe}
+.item.open .it-detail{display:block}
+.it-desc{font-size:12.5px;line-height:1.55;color:var(--mut);padding:11px 2px 4px}
+.subs{margin-top:4px}
+.sublabel{font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--navy2);font-weight:800;margin:8px 2px 6px;display:flex;align-items:center;gap:7px}
+.sublabel .sc{font-size:10px;color:var(--mut);font-weight:700;background:#eef3f8;border-radius:20px;padding:1px 7px;font-feature-settings:'tnum'}
+.sub{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:9px;cursor:pointer;user-select:none}
+.sub:hover{background:#f1f6fb}
+.sub .box{flex-shrink:0;width:18px;height:18px;border-radius:6px;border:1.5px solid #c3d2e2;background:#fff;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.sub.on .box{background:var(--teal);border-color:var(--teal)}
+.sub .box svg{width:12px;height:12px;stroke:#fff;stroke-width:3.2;fill:none;opacity:0;transition:opacity .12s}
+.sub.on .box svg{opacity:1}
+.sub .stxt{font-size:12.5px;color:var(--ink);line-height:1.35}
+.sub.on .stxt{color:var(--mut);text-decoration:line-through;text-decoration-color:#bcc8d4}
+.sub .stag{margin-left:auto;flex-shrink:0;font-size:10px;font-weight:700;color:#8a98a6;background:#eef3f8;border-radius:20px;padding:1px 7px}
+.subgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 8px}
+
+.ref{background:var(--card);border:0.5px solid var(--line);border-radius:13px;margin-top:14px;overflow:hidden;box-shadow:var(--sh)}
+.ref summary{cursor:pointer;padding:13px 16px;font-size:13px;font-weight:700;color:var(--navy);list-style:none;display:flex;align-items:center;gap:8px}
+.ref summary::-webkit-details-marker{display:none}
+.ref summary::before{content:'';width:0;height:0;border-left:5px solid var(--mut);border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform .2s}
+.ref[open] summary::before{transform:rotate(90deg)}
+.ref .rc{padding:0 18px 14px;font-size:12.5px;color:var(--ink);line-height:1.6}
+.ref .rc li{margin:3px 0}
+.foot{max-width:940px;margin:14px auto 0;padding:0 20px;font-size:11.5px;color:#8090a0;line-height:1.6}
+.foot code{background:#eef3f8;padding:1px 5px;border-radius:5px}
+@media(max-width:560px){
+  .wrap{padding:14px 13px}
+  .pill{min-width:70px;font-size:10.5px;padding:5px 8px}
+  .subgrid{grid-template-columns:1fr}
+  .overall .pct{font-size:22px}
+}
+</style></head><body>
+<header>
+  <span class="logo">+</span>
+  <div><b>Escopo &amp; Tasks</b> <span class="sub">· Release 2.0 (escopo congelado · aprovado 20/06)</span></div>
+  <span class="cloud off" id="cloudtag">localStorage</span>
+  <div class="who"><span>Você:</span><input id="who" placeholder="seu nome" maxlength="24"></div>
+</header>
+
+<div class="wrap">
+  <div class="overall">
+    <div class="top"><h1>Progresso da release</h1><span class="pct" id="pct">0%</span></div>
+    <div class="bar"><span class="s-done" id="b-done"></span><span class="s-doing" id="b-doing"></span><span class="s-blocked" id="b-blocked"></span></div>
+    <div class="tally">
+      <span><span class="dot" style="background:var(--done)"></span><b id="t-done">0</b> feito</span>
+      <span><span class="dot" style="background:var(--doing)"></span><b id="t-doing">0</b> fazendo</span>
+      <span><span class="dot" style="background:var(--blocked)"></span><b id="t-blocked">0</b> bloqueado</span>
+      <span><span class="dot" style="background:var(--todo)"></span><b id="t-todo">0</b> a fazer</span>
+      <span class="sub-tally" id="sub-tally"></span>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button data-f="all" class="active">Tudo</button>
+    <button data-f="todo">A fazer</button>
+    <button data-f="doing">Fazendo</button>
+    <button data-f="done">Feito</button>
+    <button data-f="blocked">Bloqueado</button>
+    <button class="expander" id="expander">Expandir tudo</button>
+  </div>
+  <div class="searchbox"><input id="search" placeholder="Buscar ferramenta, tela ou tarefa…" autocomplete="off"></div>
+
+  <div id="list"></div>
+
+  <details class="ref"><summary>Fora do escopo (V3+) — não entra nesta release</summary>
+    <div class="rc"><ul>
+      <li>Login rápido via Google (depende do ALF não validado) · Teste A/B · IA multimodal top (áudio/imagem/arquivo) + quiz</li>
+      <li>Motion/microinterações no app B2C ("firula", depois do app funcionar)</li>
+      <li>Receita com paciente + assinatura digital + salvar dados · Notificação WhatsApp por comportamento</li>
+      <li>Calculadoras 100% personalizáveis ponta a ponta · Admin de suporte interno · Tradução/i18n</li>
+      <li>Peçonhentos, queimadura, transfusão/HD, hemorragia digestiva, intoxicação, mordeduras</li>
+      <li>Novos lançamentos de pediatria (dengue, asma, zinco/potássio) · Escala conectada ao Google Agenda · Área do estudante</li>
+    </ul></div>
+  </details>
+
+  <details class="ref"><summary>Pendências de input do Gustavo</summary>
+    <div class="rc"><ul>
+      <li>OK formal no escopo (e-mail) · Planos novos + preços · JSON da pediatria (desbloquear pediatras)</li>
+      <li>Central de Urgência p/ médicos testarem (validação clínica externa) · Requisitos técnicos por WhatsApp · Testar o admin (Equipe, Banners) e dar feedback</li>
+    </ul></div>
+  </details>
+
+  <details class="ref"><summary>Notas de realidade (faseamento / segurança)</summary>
+    <div class="rc"><ul>
+      <li>App ainda não lê o admin (dose vive fixa no app): a ponte data-driven é construção nova. Runtime do motor = planning 22/06.</li>
+      <li>Dose estruturada (peso × N + Dose A/B com preview) é fase 2; no R1 a dose entra como texto.</li>
+      <li>Pediatria: telas e cadastro no R1; publicação de dose pediátrica a decidir (Luis + Gustavo + Gui).</li>
+      <li>Nenhuma dose migra sem revisão/assinatura clínica do Gustavo (copiar verbatim propaga erro).</li>
+    </ul></div>
+  </details>
+</div>
+
+<div class="foot">Clique na <b>etiqueta de status</b> pra avançar (A fazer → Fazendo → Feito → Bloqueado). Clique na <b>linha</b> pra abrir o detalhe e marcar as ferramentas/telas (sub-itens) uma a uma. Clique em <b>responsável</b> pra atribuir. <span id="synchint">Persistindo neste navegador — para sincronizar na nuvem pra todos, preencher <code>SB_URL</code> e <code>SB_KEY</code> no topo do arquivo (Supabase).</span></div>
+
+<script type="module">
+// ======= CONFIG SUPABASE (cole quando tiver; vazio = localStorage por navegador) =======
+const SB_URL = 'https://wlvzpauykavqscpbhjks.supabase.co';   // projeto Supabase CalcMed
+const SB_KEY = 'sb_publishable_GOnxysf2K5O0P7wbbc0d8A_uSPuFIsp';   // publishable key (segura no front, protegida por RLS)
+// Tabela esperada: calcmed_portal_tasks (item_id text pk, status text, responsavel text, updated_by text, updated_at timestamptz)
+// Sub-itens usam item_id no formato "pai/sub" e gravam status 'done'/'todo' na MESMA tabela.
+const TABLE = 'calcmed_portal_tasks';
+const LS_STATE = 'calcmed_portal_escopo_v1';
+const LS_WHO = 'calcmed_portal_who';
+const LS_OPEN = 'calcmed_portal_open_v1';
+
+// ---- ESCOPO. Cada item: [id, titulo, descricao, [subitens]] (descricao e subs opcionais).
+// Sub-item: [subId, texto, tag?]. id final do sub = "itemId/subId". Fonte: escopo congelado R2.0 + AS-IS pediatria (101 rotas) + memorias do cerebro.
+const GROUPS = [
+  ['Home / Experiência', [
+    ['home-v2','Home V2 — hub do plantonista (estilo iFood)',
+      'Hub personalizável: cards/widgets, busca unificada ("busque ou pergunte à IA"), categorias colapsadas no topo e a Central de Urgência dentro da própria Home.',
+      [['cards-widgets','Cards / widgets personalizáveis'],['busca-unificada','Busca unificada com IA ("busque ou pergunte")'],['categorias','Categorias colapsadas no topo'],['central-na-home','Central de Urgência embutida na Home'],['responsivo','Versão responsiva web/mobile']]],
+    ['anotacoes','Anotações — sistema central',
+      'Sistema central de anotações do plantonista. Entra para desenvolvimento em 22/06.',
+      [['entry','Entry points (lápis + bolinha azul)'],['sheet','Sheet de anotação (5 estados)'],['sync','Sync separado: ferramenta vs paciente'],['salvar','Salvar explícito'],['listagem','Listagem de anotações']]],
+    ['busca-relacionada','Busca por palavras relacionadas',
+      'Já existe; objetivo é manter. Ex.: digitar "hipernatremia" leva a "distúrbio do sódio".',
+      [['manter','Manter busca por sinônimos/relacionados']]],
+    ['onboarding','Onboarding novo',
+      'Task em refino (call na semana de 22/06), mas entra na release.',
+      [['fluxo','Fluxo de onboarding']]],
+  ]],
+  ['Central de Urgência', [
+    ['central-5','As 5 ferramentas lançadas juntas',
+      'As 5 âncoras vão juntas (1 dev por ferramenta). Se alguma der intercorrência, avalia-se deixá-la de fora; o plano é entregar todas. É o maior diferencial da versão.',
+      [['pcr','PCR — Parada Cardiorrespiratória (Modo PCR)'],['sepse','Sepse'],['sca','SCA — Síndrome Coronariana Aguda'],['avc','AVC'],['cad','CAD — Cetoacidose Diabética']]],
+  ]],
+  ['Checklists & Condutas', [
+    ['checklists-app','Checklists do app (telas prontas)',
+      'Telas de checklist do app B2C (componente novo: item riscado ao marcar, imagem opcional). Substituem os critérios soltos por blocos por fase, com contador. Mobile + web, light + dark.',
+      [['intubacao-cl','Intubação — Sequência, Confirmação do Tubo'],['acesso-venoso','Acesso Venoso — Material e Preparo, Técnica de Punção'],['pre-inducao','Pré-Indução (Monitorização & Acesso, Material de Via Aérea)'],['copiar-refs','Resumo / Copiar / Referências por checklist'],['listagem-cl','Listagem por domínio (categorias vêm do admin, com limite)']]],
+    ['condutas-adulto-cl','Condutas adultas com checklist embutido',
+      'Condutas que já trazem checagens dentro do passo a passo (hoje fixas no app). Ex.: contraindicações da trombólise, critérios diagnósticos, cuidados.',
+      [['trombolise-ci','Trombólise — contraindicações absolutas e relativas (AVEi / IAM / TEP)'],['cad-criterios','CAD — critérios diagnósticos e cuidados'],['enxaqueca-passos','Enxaqueca — escada de conduta (leve→intensa, falha)'],['cirrose-passos','Cirrose — conduta por cenário']]],
+    ['condutas-ped-cl','Condutas pediátricas com checklist embutido',
+      'Protocolos da pediatria que combinam dose por peso com checagens passo a passo.',
+      [['diarreia-planos','Diarreia — Planos A/B/C (sinais de desidratação)'],['asma-classif','Asma — classificação leve-moderada / grave'],['intubacao-ped','Intubação pediátrica — sequência rápida (steps 1-5)'],['anafilaxia-ped','Anafilaxia — passos de conduta']]],
+  ]],
+  ['Calculadoras', [
+    ['calc-todas','Todas as calculadoras, scores e conversores',
+      'Todas as calculadoras, scores e conversores do app atual, reformulados (responsivo web/mobile; Luis executa, não consome dev).',
+      [['clearance','Clearance de Creatinina (×2: Cockcroft + Schwartz)'],['kdigo','KDIGO (×2)'],['cardio','Cardiologia (3 calculadoras)'],['acido-base','Ácido-Base (3 calculadoras)'],['taxa-infusao','Taxa de Infusão'],['imc','IMC'],['superficie','Superfície Corporal'],['pps','Escala PPS (faltante no Figma)','faltante'],['hiperglicemias','Hiperglicemias (faltante no Figma)','faltante']]],
+    ['cid-referencias','CID / código de internação + referências',
+      'CID / código de internação + referências médicas nas calculadoras. Upgrade das calculadoras (puxado de futuro para agora).',
+      [['cid','CID / código de internação'],['refs','Referências médicas por calculadora']]],
+    ['escala-plantoes','Escala de plantões',
+      'Quase 100% desenvolvida.',[['escala','Escala de plantões']]],
+    ['passometro','Passômetro',
+      'Perto de concluir. Compartilhado com a pediatria.',[['passometro','Passômetro (lixeira 24h)']]],
+  ]],
+  ['Pediatria (101 rotas do app atual)', [
+    ['ped-sintomaticos','Sintomáticos — 9 categorias',
+      'Categorias de drogas sintomáticas reformuladas (telas e cadastro mantidos). Catálogo verbatim do as-is.',
+      [['antitermicos','Antitérmicos e Analgésicos (Dipirona, Paracetamol, Ibuprofeno)'],['aine','Anti-inflamatórios / AINE (Cetoprofeno, Nimesulida, Diclofenaco órfão)'],['antiemeticos','Antieméticos (Bromoprida, Metoclopramida, Ondansetrona, Dimenidrato)'],['antihistaminicos','Antihistamínicos (7 em acordeão)'],['antiespasmodico','Antiespasmódico (Escopolamina, Simeticona, Colidis)'],['antidiarreicos','Antidiarreicos (Saccharomyces, Zinco)'],['broncodilatadores','Broncodilatadores (8 drogas)'],['laxativos','Laxativos (5 drogas)'],['corticoides','Corticóides (7 drogas; livres no free)']]],
+    ['ped-antibioticos','Antibióticos — 23 drogas',
+      'Categoria Antibióticos Pediatria com 23 drogas navegáveis. Edição via admin cobre só antibióticos + sintomáticos nesta release.',
+      [['amoxicilina','Amoxicilina + clavulanato + sulbactam'],['ampicilina','Ampicilina + sulbactam'],['cefalosporinas','Cefalexina, Cefuroxima, Cefepima, Ceftriaxone'],['azitro-claritro','Azitromicina, Claritromicina'],['penicilinas','Penicilina G (benzatina, cristalina, procaína)'],['aminoglicosideos','Amicacina, Gentamicina'],['carbapenem','Meropenem'],['vancomicina','Vancomicina'],['antiparasitarios','Albendazol, Mebendazol, Metronidazol, Secnidazol'],['outros-atb','Acetilcefuroxima e demais (23 no total)']]],
+    ['ped-urgencias','Urgências — 10 protocolos',
+      'Protocolos / fluxos multi-step com doses calculadas por peso.',
+      [['diarreia','Diarreia na Criança (Planos A/B/C)'],['asma','Exacerbação de Asma (leve-moderada / grave)'],['convulsiva','Crise Convulsiva (6 drogas)'],['anafilaxia','Anafilaxia (livre no free)'],['hipoglicemia','Hipoglicemia (livre no free)'],['bradicardia','Bradicardia'],['taquicardia','Taquicardia'],['pcr-ped','PCR pediátrico (5 abas)'],['intubacao','Intubação (sequência rápida)'],['vm','Ventilação Mecânica']]],
+    ['ped-diluicoes','Diluições e Doses',
+      'Calculadoras de diluição "Monte sua solução".',
+      [['hidratacao','Hidratação-Manutenção (Holliday-Segar)'],['vasoativas','Drogas Vasoativas (8 drogas, vazão/volume)'],['custom-solutions','Soluções Personalizadas (oral / vazão / volume)'],['ketofol','Ketofol'],['ketodex','Ketodex']]],
+    ['ped-calc-conv','Calculadoras + Conversores + Informações',
+      'Calculadoras pediátricas, 7 conversores (livres no free) e tabela de referência.',
+      [['clearance-ped','Clearance de Creatinina (Schwartz + Cockcroft)'],['superficie-ped','Superfície Corporal (Mosteller/Costeff)'],['taxa-infusao-ped','Taxa de Infusão'],['conversores','7 Conversores de unidade'],['sinais-vitais','Sinais Vitais Normais (sair da imagem JPG)'],['doses-ped','Doses Pediátricas (criar/salvar/ver)']]],
+  ]],
+  ['Adulto (app atual, por categoria)', [
+    ['adulto-urgencias','Urgências e protocolos — 8 condutas',
+      'Protocolos e condutas adultas do app atual (fora das 5 centrais). Conteúdo de dose hoje vive fixo no app; reformulação responsiva web/mobile.',
+      [['cad-adulto','Cetoacidose Diabética — CAD (8 abas)'],['trombolise','Trombólise (AVEi / IAM / TEP)'],['enxaqueca','Enxaqueca / Migrânea (< 72h e estado migranoso)'],['cirrose','Cirrose (Albumina humana / Octreotida)'],['ira-kdigo','Injúria Renal Aguda — KDIGO (creatinina + débito urinário)'],['hipoglicemia','Hipoglicemia (árvore de decisão)'],['hiperglicemia','Hiperglicemia (insulina por peso)'],['anticonvulsivantes','Anticonvulsivantes (protocolo por peso)']]],
+    ['adulto-disturbios','Distúrbios hidroeletrolíticos e ácido-base — 9',
+      'Categoria-índice "Distúrbios Hidroeletrolíticos" + calculadoras eletrolíticas e o interpretador ácido-base.',
+      [['disturbio-sodio','Distúrbio de Sódio (hipo / hipernatremia)'],['disturbio-potassio','Distúrbio de Potássio (hipo / hipercalemia)'],['disturbio-bicarbonato','Distúrbio de Bicarbonato'],['disturbio-magnesio','Distúrbio de Magnésio'],['hipocalcemia','Cálcio — Hipocalcemia'],['anion-gap','Ânion Gap (e AG corrigido)'],['osmolaridade','Osmolaridade Plasmática'],['correcao-na','Correção de Sódio pela Glicemia'],['correcao-ca','Correção de Cálcio pela Albumina'],['acido-base','Distúrbios Ácido-Básicos (gasometria)']]],
+    ['adulto-calculadoras','Calculadoras e escores — 11',
+      'Calculadoras de fórmula, conversores e o motor de escores adulto. Reformulação responsiva (Luis executa, não consome dev).',
+      [['imc','IMC'],['pam','PAM'],['ldl','LDL (Friedewald)'],['qtc','Intervalo QTc (4 métodos)'],['clearance','Clearance de Creatinina (CKD-EPI + Cockcroft-Gault)'],['taxa-infusao','Taxa de Infusão'],['peso-ideal','Peso Ideal + Volume Corrente'],['pao2','PaO₂ ideal para a idade'],['relacao-pf','Relação P/F (PaO₂/FiO₂)'],['pps','Escala PPS'],['motor-escores','Motor de Escores (data-driven)']]],
+    ['adulto-cardio','Cardiologia — 4',
+      'Protocolos e tabelas de cardiologia do app atual.',
+      [['bradicardia','Bradicardia (conduta interativa)'],['taquiarritmia','Taquiarritmia (conduta interativa)'],['cardioversao','Cardioversão Elétrica (sedação + cargas)'],['antiarritmicos','Antiarrítmicos (tabela de doses/diluições)']]],
+    ['adulto-vasoativas','Drogas vasoativas — 10',
+      'Calculadoras de infusão em BIC, uma por droga.',
+      [['noradrenalina','Noradrenalina'],['adrenalina','Adrenalina'],['dopamina','Dopamina'],['dobutamina','Dobutamina'],['nitroprussiato','Nitroprussiato de Sódio'],['nitroglicerina','Nitroglicerina (Tridil®)'],['milrinona','Milrinona'],['levosimendan','Levosimendan'],['vasopressina','Vasopressina'],['azul-metileno','Azul de Metileno']]],
+    ['adulto-solucoes','Soluções, diluições e antídotos',
+      'Tabelas de diluição, combos de sedação, soluções personalizadas e antídotos.',
+      [['solucoes-padrao','Soluções Padronizadas (tabela)'],['solucoes-custom','Soluções Personalizadas (CRUD do usuário)'],['ketodex','Ketodex (cetamina + dexmedetomidina)'],['ketofol','Ketofol (cetamina + propofol)'],['anticoagulantes','Anticoagulantes (tabela por cenário)'],['flumazenil','Flumazenil (antídoto)'],['naloxona','Naloxona (antídoto)'],['vm-parametros','Parâmetros Iniciais de Ventilação Mecânica']]],
+    ['adulto-conversores','Conversores — 7',
+      'Conversores de unidade adultos (livres no free).',
+      [['mlh-mcgkgmin','mL/h ↔ mcg/kg/min'],['mlh-gtsmin','mL/h ↔ gts/min'],['pct-mgml','% → mg/mL'],['mlh-mcgmin','mL/h ↔ mcg/min'],['conv-corticoides','Conversor de Corticóides']]],
+    ['adulto-antibioticos','Antibióticos hospitalares — 31',
+      'Antibióticos adultos do app atual, com ajuste de dose (clearance) onde aplicável. Edição via admin nesta release cobre só antibióticos e sintomáticos.',
+      [['atb-amino','Aminoglicosídeos (Amicacina, Gentamicina)'],['atb-penicilinas','Penicilinas (Ampicilina, Ampicilina+Sulbactam, Amoxicilina+Clavulanato, Oxacilina, Piperacilina+Tazobactam)'],['atb-cefalo','Cefalosporinas (Cefazolina, Cefuroxima, Cefepime, Ceftazidima, Ceftazidima+Avibactam, Ceftriaxone, Ceftarolina)'],['atb-carbapenem','Carbapenêmicos (Meropenem, Imipenem+Cilastatina)'],['atb-quinolonas','Quinolonas (Ciprofloxacin, Levofloxacin, Norfloxacin)'],['atb-macrolideos','Macrolídeos (Azitromicina, Claritromicina)'],['atb-glico','Glicopeptídeos / anti-MRSA (Vancomicina, Teicoplanina, Daptomicina, Linezolida)'],['atb-poli','Polimixina B'],['atb-diversos','Clindamicina, Doxiciclina, Fosfomicina, Metronidazol, Sulfametoxazol+Trimetoprim']]],
+    ['adulto-antimicrobianos','Antifúngicos e antivirais — 7',
+      'Demais antimicrobianos hospitalares do app (não-antibióticos).',
+      [['antifungicos','Antifúngicos (Anfotericina B desoxicolato, Anfotericina B lipossomal, Caspofungina, Micafungina, Fluconazol)'],['antivirais','Antivirais (Aciclovir, Ganciclovir)']]],
+  ]],
+  ['Admin', [
+    ['admin-equipe','Gestão de Equipe',
+      'Usuários, cargos e permissões (cada cargo com suas permissões).',
+      [['usuarios','Usuários'],['cargos','Cargos'],['permissoes','Permissões por cargo']]],
+    ['admin-antibioticos','Antibióticos (módulo mais complexo)',
+      'Módulo mais complexo do admin. Regras de modelagem detalhadas no grupo abaixo.',
+      [['form','Formulário visual'],['logica','Lógica / JSON (fase 2, Gui)']]],
+    ['admin-condutas','Condutas',
+      'CRUDs/modelos com campos que puxam textos; inclui receitas (versão robusta com paciente fica para depois) e encaminhamentos.',
+      [['cruds','CRUDs / modelos'],['receitas','Receitas (V1)'],['encaminhamentos','Encaminhamentos']]],
+    ['admin-checklists','Checklists',
+      'Cadastro e gestão de checklists do app. Categorias/domínios da listagem vêm do admin (com limite) e alimentam o agrupamento das telas.',
+      [['checklists','CRUD de checklists'],['categorias-cl','Categorias / domínios (com limite)'],['itens-cl','Itens do checklist (texto + imagem opcional)'],['ordem-cl','Ordenação por fase / bloco']]],
+    ['admin-banners','Banners',
+      'Criação e monitoramento. Público por plano + superfície (multi-seleção) + dimensão recomendada da imagem.',
+      [['publico','Público por plano (Free / Mensal / Anual)'],['superficie','Superfície (Home Adulto / Pediatria / Todos / Menu)'],['dimensao','Dimensão recomendada da imagem'],['formatos','2 formatos (texto-only + imagem)'],['monitoramento','Monitoramento']]],
+    ['admin-referencias','Referências + ferramentas similares',
+      'Saem do hardcode; o Gustavo controla, por calculadora, as referências e quais ferramentas similares aparecem (relação real via select linkado).',
+      [['refs-edit','Referências editáveis por calculadora'],['similares','Ferramentas similares (relação real)']]],
+    ['admin-revisao','Fluxo de Revisão Médica',
+      'Rascunho → revisão → publicação. Quem cria não necessariamente publica; conteúdo clínico só vai ao ar após revisão autorizada (segurança clínica).',
+      [['rascunho','Estado Rascunho'],['revisao','Estado Em revisão'],['publicacao','Publicação pós-revisão']]],
+    ['admin-metricas','Métricas / feedback (joinha)',
+      'Joinha (cima/baixo) + comentário no app; no admin, listagem (calculadora, comentário, data) + exportação.',
+      [['joinha','Joinha + comentário no app'],['listagem-fb','Listagem no admin'],['export-fb','Exportação para análise']]],
+    ['admin-operacao','Operação de conteúdo',
+      'Múltipla seleção + ações em massa (com confirmação para destrutivas); Export CSV + Import JSON.',
+      [['multi-selecao','Múltipla seleção + ações em massa'],['export-csv','Export CSV'],['import-json','Import JSON']]],
+  ]],
+  ['Admin — Antibióticos (modelagem)', [
+    ['atb-formulas','Fórmulas fixas em hardcode',null,[['liga-desliga','Admin só liga/desliga "este ATB tem o cálculo" (ex.: clearance)']]],
+    ['atb-tipo','Admin guarda o TIPO de cálculo',null,[['runtime','Nunca o resultado: calculado em runtime']]],
+    ['atb-adulto-ou-ped','Adulto OU pediátrico',null,[['mutuamente-excl','Cada antibiótico é um ou outro (pediatria não usa clearance)']]],
+    ['atb-faixas-idade','Faixas de idade abertas',null,[['faixas','Faixas personalizáveis por medicação']]],
+    ['atb-peso','Peso como multiplicador opcional',null,[['box-peso','Box sim/não na UI de dose (molde p/ outras ferramentas)']]],
+    ['atb-dose-intervalo','Dose como intervalo (Dose A / Dose B)',null,[['toggle','Dois campos + toggle "é intervalo?" com preview de faixa']]],
+    ['atb-templates','Templates pré-preenchidos',null,[['templates','Vindos do código, ou começar do zero (validar quais)']]],
+    ['atb-faseamento','Faseamento form → lógica',null,[['fase','Form visual primeiro; lógica/JSON depois (Gui)']]],
+    ['atb-ped-escopo','Edição pediátrica via admin',null,[['escopo','Só antibióticos e sintomáticos nesta release']]],
+  ]],
+  ['Monetização / Auth', [
+    ['auth-alf','ALF / deep link + auth unificado',
+      'ALF / deep link (AppsFlyer) + login único / auth unificado.',
+      [['alf','ALF / deep link (AppsFlyer)'],['auth-unico','Login único / auth unificado']]],
+    ['planos-paywall','Planos novos + paywall',
+      'Depende da definição do Gustavo (planos e preços); paywall puxado para a próxima sprint.',
+      [['planos','Cards de planos novos'],['paywall','Paywall (próxima sprint)']]],
+  ]],
+  ['Técnico (transversal)', [
+    ['resp-zoom','Responsividade + zoom do dispositivo',
+      'Web / mobile / iPad, incluindo o zoom do dispositivo (hoje, com zoom, há botões que o usuário não consegue clicar).',
+      [['web-mobile-ipad','Responsivo web / mobile / iPad'],['zoom','Zoom do dispositivo (botões clicáveis)']]],
+    ['android-navbar','Navbar inferior do Android',null,[['safe-area','Detecção da safe area inferior']]],
+    ['dark-light','Modo dark / light',null,[['dark-light','Tema dark / light']]],
+    ['offline','Modo offline',null,[['offline','Mobile-first; manter no radar']]],
+    ['tags-firebase','Tags de marketing / eventos Firebase',
+      'Instrumentar todas as telas (jornada, erros, construção de públicos) + disparo automático por público.',
+      [['instrumentar','Instrumentar todas as telas'],['publicos','Disparo automático por público']]],
+    ['ota','Shortbuild / OTA (CodePush)',null,[['ota','Publicar atualizações sem subir versão na loja']]],
+  ]],
+  ['Suporte', [
+    ['suporte-externo','Tickets via ferramenta externa',
+      'Ferramenta externa pronta (provável Microsoft, a confirmar; Trello provisório). Sem admin de suporte interno — tira o Gustavo do WhatsApp manual.',
+      [['ferramenta','Definir ferramenta (MS a confirmar)']]],
+  ]],
+];
+
+// ---- ids derivados ----
+const PARENT_IDS = GROUPS.flatMap(g => g[1].map(i => i[0]));
+function subsOf(item){ return item[3] || []; }
+function subId(itemId, sid){ return itemId + '/' + sid; }
+const ALL_SUB_IDS = GROUPS.flatMap(g => g[1].flatMap(i => subsOf(i).map(s => subId(i[0], s[0]))));
+const ITEM_INDEX = {};   // itemId -> [groupName, item]
+GROUPS.forEach(([gname, items]) => items.forEach(it => ITEM_INDEX[it[0]] = [gname, it]));
+
+const ORDER = ['todo','doing','done','blocked'];
+const LABEL = {todo:'A fazer',doing:'Fazendo',done:'Feito',blocked:'Bloqueado'};
+
+let state = {};   // id -> {status, responsavel, updated_by, updated_at}
+let openSet = new Set();
+let filter = 'all';
+let query = '';
+let sb = null;
+
+function who(){ return (document.getElementById('who').value || '').trim() || 'anônimo'; }
+function nowISO(){ return new Date().toISOString(); }
+function fmt(iso){ if(!iso) return ''; try{ const d=new Date(iso); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function initCloud(){
+  if(SB_URL && SB_KEY){
+    try{
+      const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm');
+      sb = createClient(SB_URL, SB_KEY);
+      document.getElementById('cloudtag').textContent = 'nuvem (Supabase)';
+      document.getElementById('cloudtag').className = 'cloud on';
+      document.getElementById('synchint').textContent = 'Sincronizando na nuvem (Supabase) — todos veem o mesmo.';
+    }catch(e){ sb = null; }
+  }
+}
+async function load(){
+  let local = {};
+  try{ local = JSON.parse(localStorage.getItem(LS_STATE) || '{}'); }catch(e){}
+  state = local;
+  if(sb){
+    try{
+      const { data, error } = await sb.from(TABLE).select('*');
+      if(!error && data){
+        const remote = {};
+        data.forEach(r => { remote[r.item_id] = {status:r.status, responsavel:r.responsavel, updated_by:r.updated_by, updated_at:r.updated_at}; });
+        state = remote;
+        localStorage.setItem(LS_STATE, JSON.stringify(state));
+      }
+    }catch(e){}
+  }
+}
+async function persist(id){
+  localStorage.setItem(LS_STATE, JSON.stringify(state));
+  if(sb){
+    const s = state[id] || {};
+    try{ await sb.from(TABLE).upsert({ item_id:id, status:s.status||'todo', responsavel:s.responsavel||'', updated_by:s.updated_by||'', updated_at:s.updated_at||nowISO() }, { onConflict:'item_id' }); }catch(e){}
+  }
+}
+function st(id){ return state[id] && state[id].status ? state[id].status : 'todo'; }
+function subDone(id){ return st(id) === 'done'; }
+
+async function cycle(id){
+  const cur = st(id); const next = ORDER[(ORDER.indexOf(cur)+1) % ORDER.length];
+  state[id] = Object.assign({}, state[id], { status: next, updated_by: who(), updated_at: nowISO() });
+  await persist(id); render();
+}
+async function toggleSub(fullId){
+  const next = subDone(fullId) ? 'todo' : 'done';
+  state[fullId] = Object.assign({}, state[fullId], { status: next, updated_by: who(), updated_at: nowISO() });
+  await persist(fullId); render();
+}
+async function setResp(id){
+  const cur = (state[id] && state[id].responsavel) || '';
+  const v = prompt('Responsável por este item:', cur);
+  if(v === null) return;
+  state[id] = Object.assign({}, state[id], { responsavel: v.trim(), updated_by: who(), updated_at: nowISO() });
+  await persist(id); render();
+}
+function toggleOpen(id){
+  if(openSet.has(id)) openSet.delete(id); else openSet.add(id);
+  localStorage.setItem(LS_OPEN, JSON.stringify([...openSet]));
+  render();
+}
+window._cycle = cycle; window._setResp = setResp; window._toggleSub = toggleSub; window._toggleOpen = toggleOpen;
+
+// progresso de sub-itens de um item-pai
+function subProgress(item){
+  const subs = subsOf(item);
+  if(!subs.length) return null;
+  let done = 0;
+  subs.forEach(s => { if(subDone(subId(item[0], s[0]))) done++; });
+  return { done, total: subs.length };
+}
+// match de busca (item-pai, descricao ou qualquer sub)
+function matchesQuery(item){
+  if(!query) return true;
+  const hay = [item[1], item[2]||''].concat(subsOf(item).map(s => s[1])).join(' ').toLowerCase();
+  return hay.includes(query);
+}
+
+function render(){
+  // tally pais
+  const c = {todo:0,doing:0,done:0,blocked:0};
+  PARENT_IDS.forEach(id => c[st(id)]++);
+  const total = PARENT_IDS.length;
+  document.getElementById('t-done').textContent = c.done;
+  document.getElementById('t-doing').textContent = c.doing;
+  document.getElementById('t-blocked').textContent = c.blocked;
+  document.getElementById('t-todo').textContent = c.todo;
+  document.getElementById('pct').innerHTML = Math.round(c.done/total*100) + '%<small>&nbsp;dos ' + total + ' blocos</small>';
+  document.getElementById('b-done').style.width = (c.done/total*100) + '%';
+  document.getElementById('b-doing').style.width = (c.doing/total*100) + '%';
+  document.getElementById('b-blocked').style.width = (c.blocked/total*100) + '%';
+  // tally subs
+  let subDoneCount = 0;
+  ALL_SUB_IDS.forEach(id => { if(subDone(id)) subDoneCount++; });
+  document.getElementById('sub-tally').textContent = subDoneCount + ' / ' + ALL_SUB_IDS.length + ' ferramentas/telas';
+
+  // list
+  const host = document.getElementById('list'); host.innerHTML = '';
+  let anyShown = false;
+  GROUPS.forEach(([gname, items]) => {
+    const shown = items.filter(it => (filter === 'all' || st(it[0]) === filter) && matchesQuery(it));
+    if(!shown.length) return;
+    anyShown = true;
+    const done = items.filter(it => st(it[0])==='done').length;
+    const g = document.createElement('div'); g.className = 'grp';
+    g.innerHTML = '<div class="grp-head"><h2>'+esc(gname)+'</h2>'+
+      '<div class="gbar"><span style="width:'+Math.round(done/items.length*100)+'%"></span></div>'+
+      '<span class="gc">'+done+'/'+items.length+'</span></div>';
+    shown.forEach(it => {
+      const [id, title, desc] = it;
+      const s = state[id] || {}; const status = st(id);
+      const subs = subsOf(it);
+      const prog = subProgress(it);
+      const isOpen = openSet.has(id);
+      const row = document.createElement('div');
+      row.className = 'item' + (status==='done'?' done':'') + (isOpen?' open':'');
+
+      // header row
+      let head = '<div class="it-row" onclick="_toggleOpen(\''+id+'\')">'+
+        '<span class="pill '+status+'" onclick="event.stopPropagation();_cycle(\''+id+'\')">'+LABEL[status]+'</span>'+
+        '<div class="it-body">'+
+          '<div class="it-titrow">'+
+            (subs.length ? '<span class="it-chev">▶</span>' : '<span class="it-chev" style="opacity:.25">▪</span>')+
+            '<span class="it-title">'+esc(title)+'</span>'+
+            (prog ? '<span class="it-subcount">'+prog.done+'/'+prog.total+'</span>' : '')+
+          '</div>'+
+          '<div class="it-meta">'+
+            '<span class="resp'+(s.responsavel?' set':'')+'" onclick="event.stopPropagation();_setResp(\''+id+'\')">'+(s.responsavel?('👤 '+esc(s.responsavel)):'+ responsável')+'</span>'+
+            (prog ? '<span class="it-mini"><span style="width:'+Math.round(prog.done/prog.total*100)+'%"></span></span>' : '')+
+            (s.updated_by && s.updated_at ? '<span>por '+esc(s.updated_by)+' · '+fmt(s.updated_at)+'</span>' : '')+
+          '</div>'+
+        '</div></div>';
+
+      // detail
+      let detail = '<div class="it-detail">';
+      if(desc) detail += '<div class="it-desc">'+esc(desc)+'</div>';
+      if(subs.length){
+        detail += '<div class="sublabel">Ferramentas / telas <span class="sc">'+prog.done+' de '+prog.total+'</span></div>';
+        detail += '<div class="subs subgrid">';
+        subs.forEach(sub => {
+          const fid = subId(id, sub[0]);
+          const on = subDone(fid);
+          detail += '<div class="sub'+(on?' on':'')+'" onclick="_toggleSub(\''+fid+'\')">'+
+            '<span class="box"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>'+
+            '<span class="stxt">'+esc(sub[1])+'</span>'+
+            (sub[2] ? '<span class="stag">'+esc(sub[2])+'</span>' : '')+
+          '</div>';
+        });
+        detail += '</div>';
+      } else if(!desc){
+        detail += '<div class="it-desc" style="opacity:.7">Sem sub-itens. Use a etiqueta de status no item.</div>';
+      }
+      detail += '</div>';
+
+      row.innerHTML = head + detail;
+      g.appendChild(row);
+    });
+    host.appendChild(g);
+  });
+  if(!anyShown){
+    host.innerHTML = '<div style="text-align:center;color:var(--mut);font-size:13px;padding:40px 0">Nada encontrado com esse filtro/busca.</div>';
+  }
+}
+
+// filtros
+document.getElementById('filters').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b || b.id === 'expander') return;
+  filter = b.dataset.f;
+  [...document.querySelectorAll('#filters button[data-f]')].forEach(x => x.classList.toggle('active', x===b));
+  render();
+});
+// expandir/recolher tudo
+document.getElementById('expander').addEventListener('click', () => {
+  const allOpen = PARENT_IDS.every(id => openSet.has(id));
+  if(allOpen){ openSet.clear(); document.getElementById('expander').textContent = 'Expandir tudo'; }
+  else { PARENT_IDS.forEach(id => openSet.add(id)); document.getElementById('expander').textContent = 'Recolher tudo'; }
+  localStorage.setItem(LS_OPEN, JSON.stringify([...openSet]));
+  render();
+});
+// busca
+document.getElementById('search').addEventListener('input', e => {
+  query = e.target.value.trim().toLowerCase();
+  render();
+});
+// who
+const whoInput = document.getElementById('who');
+whoInput.value = localStorage.getItem(LS_WHO) || '';
+whoInput.addEventListener('change', () => localStorage.setItem(LS_WHO, whoInput.value.trim()));
+// restaura abertos
+try{ JSON.parse(localStorage.getItem(LS_OPEN) || '[]').forEach(id => openSet.add(id)); }catch(e){}
+
+(async function(){ await initCloud(); await load(); render(); })();
+</script>
+</body></html>

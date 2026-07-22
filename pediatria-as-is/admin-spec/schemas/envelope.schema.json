@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://calcmed.app/schemas/admin/conteudo/v1/envelope.schema.json",
+  "title": "Conteudo clinico CalcMed (envelope unificado, todos os 9 moldes T1..T9)",
+  "description": "Envelope comum a todo item de conteudo do admin unificado. REUSA os campos REAIS de antibioticos.schema.json (id, nome, classe, publico, via, statusEditorial, revisaoMedicaStatus, slots, observacoes, referencias, tagsRisco, ferramentasSimilares, ordemBlocos) e generaliza com o discriminador `tipo` (T1..T9) [PROPOSTA] + `corpo` (sub-objeto especifico do molde, validado por tipo) + `contraindicacoes` (gate duro vs texto). STATUS: o envelope deriva do schema persistido real (x-status: provisorio-aguardando-gui); o discriminador `tipo`, `corpo`, `schemaVersion` e os 3 slots novos (idade, apresentacao, doseMaxima) sao [PROPOSTA] da fase 2 (03-backend-json.md §1, 00-HANDOFF-GUI.md §2.1).",
+  "x-status": "proposta-fase2-deriva-de-provisorio-aguardando-gui",
+  "x-fontes": [
+    "apps/web/src/admin/contracts/antibioticos.schema.json [REAL, envelope herdado]",
+    "admin-spec/03-backend-json.md §1 [PROPOSTA, generalizacao com tipo]",
+    "admin-spec/01-sistema-de-tipos.md §4.1 e §4.3 [moldes + 10 slots + 3 novos]",
+    "admin-spec/00-HANDOFF-GUI.md §2.1"
+  ],
+  "type": "object",
+  "required": [
+    "id",
+    "tipo",
+    "nome",
+    "classe",
+    "publico",
+    "statusEditorial",
+    "revisaoMedicaStatus",
+    "slots",
+    "observacoes",
+    "referencias",
+    "tagsRisco",
+    "ferramentasSimilares"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identificador do item (uid). Gerado por crypto.randomUUID com fallback; seeds usam ids fixos legiveis. [REAL]"
+    },
+    "tipo": {
+      "description": "DISCRIMINADOR do molde canonico T1..T9. Decide qual sub-schema valida `corpo`. [PROPOSTA]",
+      "enum": [
+        "droga-dose",
+        "calculadora-formula",
+        "escore-por-pontos",
+        "escore-por-criterios",
+        "protocolo-multi-step",
+        "conduta-arvore-decisao",
+        "conversor",
+        "tabela-referencia",
+        "ferramenta-utilitaria"
+      ]
+    },
+    "nome": {
+      "type": "string",
+      "description": "Nome do conteudo (medicamento/calculadora/escore). Vazio em rascunho recem-criado e aceito pelo schema; validate bloqueia salvar sem nome. [REAL]"
+    },
+    "classe": {
+      "type": "string",
+      "description": "Classe farmacologica ou categoria de menu (texto livre, ex.: AINE, Cefalosporina 3a geracao). [REAL]"
+    },
+    "publico": {
+      "description": "Publico alvo. Gate V2: so `adulto` publica (regra em validate, nao no schema). [REAL]",
+      "enum": ["adulto", "pediatrico", "ambos"]
+    },
+    "via": {
+      "description": "Via da TELA (a combinada EV+Oral existe so aqui; a via de cada linha de dose e atomica em corpo.posologias[].viaInline). So obrigatoria em droga-dose (regra contextual). [REAL]",
+      "enum": ["EV", "Oral", "EV+Oral", "IM"]
+    },
+    "statusEditorial": {
+      "description": "Workflow editorial. [REAL]",
+      "enum": ["rascunho", "em-revisao", "publicado", "arquivado"]
+    },
+    "revisaoMedicaStatus": {
+      "description": "Gate clinico. Publicar exige `aprovado` (regra em validate). `medicalReviewRequired` e DERIVADO (revisaoMedicaStatus != aprovado), nunca persistido. [REAL]",
+      "enum": ["pendente", "aprovado", "reprovado"]
+    },
+    "observacoes": {
+      "$ref": "#/$defs/observacoes"
+    },
+    "referencias": {
+      "type": "string",
+      "description": "Referencia clinica rastreavel (texto livre). Exigida ao publicar quando o slot referencias esta ligado (regra em validate). [REAL]"
+    },
+    "contraindicacoes": {
+      "description": "Gate duro vs texto. String = aviso clinico; objeto {texto,gate} = gate booleano que pode bloquear o render da dose (gate=true). Origem MODELO-DOSE §6. [PROPOSTA generalizada]",
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["texto", "gate"],
+          "properties": {
+            "texto": { "type": "string" },
+            "gate": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "tagsRisco": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags de risco. parseTags quebra string-com-virgulas em array; arrays pre-existentes passam crus. [REAL]"
+    },
+    "ferramentasSimilares": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Cross-links sugeridos na tela. Mesma normalizacao de tagsRisco. [REAL]"
+    },
+    "slots": {
+      "$ref": "#/$defs/slots"
+    },
+    "ordemBlocos": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ordem dos blocos na tela (arrastavel). [REAL, do model]"
+    },
+    "corpo": {
+      "type": "object",
+      "description": "Sub-objeto especifico do molde, escolhido pelo discriminador `tipo`. Valida contra: droga-dose -> corpo-droga-dose.schema.json; calculadora-formula -> corpo-calculadora.schema.json; escore-por-pontos -> corpo-escore.schema.json; escore-por-criterios -> corpo-escore-criterios (em corpo-protocolo.schema.json $defs ou proprio); protocolo-multi-step -> corpo-protocolo.schema.json; conduta-arvore-decisao -> corpo-conduta.schema.json; conversor -> corpo-conversor.schema.json; tabela-referencia -> corpo-tabela-referencia.schema.json; ferramenta-utilitaria -> corpo-ferramenta (minimo). A amarracao tipo->corpo e [PROPOSTA] e o backend (Gui) valida-a; JSON Schema puro nao consegue cross-referenciar arquivos por discriminador sem $ref condicional, por isso aqui `corpo` e um object aberto e a checagem por tipo vive no validate (ver README)."
+    },
+    "duplicadoDe": {
+      "type": "string",
+      "description": "Nome do item de origem quando criado pelo fluxo de duplicar (opcional). [REAL]"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Versao do FORMATO do item (eixo distinto da revisao clinica). Item unificado nasce 1; sobe quando a ESTRUTURA muda. Guarda a idempotencia da migracao v3->unificado. [PROPOSTA]"
+    }
+  },
+  "additionalProperties": true,
+  "x-additionalProperties-nota": "additionalProperties LIVRE de proposito: campos legados extras no topo (ex.: doseAdulto, doseTipo, presetTemplate) sobrevivem ao normalize pelo spread ...item e sao tolerados. Apertar isso quebraria imports/migracao v2. [REAL]",
+  "$defs": {
+    "slots": {
+      "type": "object",
+      "description": "Slots de tela persistidos (a verdade sobre o que a tela exibe). Os 10 conhecidos sempre presentes apos o normalize [REAL]; os 3 novos (idade, apresentacao, doseMaxima) sao [PROPOSTA] p/ trazer pediatria ao admin (01-sistema-de-tipos §4.3). Defaults: extras (observacoes/referencias/copiarCompartilhar/ferramentasSimilares) ON; clinicos OFF.",
+      "required": [
+        "peso",
+        "definirDose",
+        "dialise",
+        "regime",
+        "clearance",
+        "cockcroft",
+        "observacoes",
+        "referencias",
+        "copiarCompartilhar",
+        "ferramentasSimilares"
+      ],
+      "properties": {
+        "peso": { "type": "boolean", "description": "Campo de peso do paciente." },
+        "definirDose": { "type": "boolean", "description": "Bloco 'Defina a dose'. Publicacao bloqueada ate a fase 2 (gate REAL)." },
+        "dialise": { "type": "boolean", "description": "Bloco de ajuste para dialise." },
+        "regime": { "type": "boolean", "description": "Seletor regime unico vs multiplas doses." },
+        "clearance": { "type": "boolean", "description": "Campo de clearance de creatinina (CrCl)." },
+        "cockcroft": { "type": "boolean", "description": "Calculadora Cockcroft-Gault embutida." },
+        "observacoes": { "type": "boolean", "description": "Secao de observacoes (default ON)." },
+        "referencias": { "type": "boolean", "description": "Secao de referencias (default ON)." },
+        "copiarCompartilhar": { "type": "boolean", "description": "Acoes copiar/compartilhar (default ON)." },
+        "ferramentasSimilares": { "type": "boolean", "description": "Secao de ferramentas similares (default ON)." },
+        "idade": { "type": "boolean", "description": "NOVO [PROPOSTA]: campo idade + unidade Meses/Anos (gate pediatrico)." },
+        "apresentacao": { "type": "boolean", "description": "NOVO [PROPOSTA]: seletor de apresentacao/concentracao." },
+        "doseMaxima": { "type": "boolean", "description": "NOVO [PROPOSTA]: exibe/aplica teto (clamp vs texto)." }
+      }
+    },
+    "observacoes": {
+      "description": "Forma canonica (UI) = array de {id,nivel,texto}. Formas TOLERADAS por inconsistencia conhecida do normalize (spread ...item reaplica o cru de import/migracao v2): string unica OU array de strings. O schema aceita as tres. [REAL]",
+      "anyOf": [
+        { "type": "string" },
+        {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "type": "string" },
+              { "$ref": "#/$defs/observacao" }
+            ]
+          }
+        }
+      ]
+    },
+    "observacao": {
+      "type": "object",
+      "description": "Observacao na forma canonica gerada pela UI. Sem required: o spread do normalize pode persistir objetos crus incompletos vindos de import. [REAL]",
+      "properties": {
+        "id": { "type": "string", "description": "Id da observacao (uid)." },
+        "nivel": {
+          "description": "Severidade (NIVEL_OBS_OPTIONS): Nota / Atencao / Critico.",
+          "enum": ["footnote", "warning", "critical"]
+        },
+        "texto": { "type": "string", "description": "Texto da observacao." }
+      }
+    }
+  }
+}

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcMed Pediatria — Mapa de Fluxos (as-is 2026-06-20)</title>
+<style>
+  :root{
+    --navy:#0e2a47; --navy2:#16395f; --teal:#1f9e8f; --teal-d:#147c70;
+    --red:#d23b3b; --amber:#e0a008; --ink:#13212e; --mut:#5b6b7a;
+    --line:#d9e2ec; --bg:#eef3f8; --card:#fff; --chip:#eef3f8;
+    --free:#1f9e8f; --prem:#c98a00;
+    --A:#2f7d6e; --B:#b03b66; --C:#2d6fb0; --D:#1f9e8f; --E:#6b54c4; --F:#7a869a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.4;padding:26px 20px 60px;font-size:13px}
+  .wrap{max-width:1280px;margin:0 auto}
+  h1{font-size:23px;margin:0;color:var(--navy);letter-spacing:-.3px}
+  h1 .em{color:var(--teal)}
+  .sub{color:var(--mut);font-size:12.5px;margin:4px 0 0}
+  header.top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 22px;border-bottom:3px solid var(--navy);padding-bottom:14px;margin-bottom:20px}
+  .stats{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .stat{background:var(--navy);color:#fff;border-radius:9px;padding:6px 11px;text-align:center}
+  .stat b{display:block;font-size:16px;line-height:1.1}
+  .stat span{font-size:10px;opacity:.82;text-transform:uppercase;letter-spacing:.4px}
+
+  .layer{margin:0 0 14px}
+  .ltag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#fff;background:var(--navy2);border-radius:5px;padding:2px 9px;margin-bottom:9px}
+
+  /* generic flow row */
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:40px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 1px 2px rgba(16,40,60,.05)}
+  .box .t{font-weight:700;font-size:12.5px;color:var(--navy)}
+  .box .d{font-size:11px;color:var(--mut);margin-top:2px}
+  .arr{color:var(--mut);font-weight:800;font-size:16px;flex:0 0 auto}
+  .pill{display:inline-block;font-size:9.5px;font-weight:800;padding:1px 7px;border-radius:20px;color:#fff}
+  .pill.free{background:var(--free)} .pill.prem{background:var(--prem)}
+  .dotf{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--free)}
+  .dotp{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--prem)}
+
+  /* hub grid */
+  .hub{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px}
+  .blk{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--navy2);border-radius:9px;padding:8px 10px}
+  .blk .h{display:flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;color:var(--navy)}
+  .blk .h .n{margin-left:auto;font-size:10px;color:var(--mut);font-weight:600}
+  .blk .meta{font-size:10.5px;color:var(--mut);margin-top:3px}
+  .av{font-size:9px;font-weight:800;color:#fff;border-radius:4px;padding:0 5px}
+
+  /* archetype lanes */
+  .lane{background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:11px;overflow:hidden;box-shadow:0 1px 3px rgba(16,40,60,.05)}
+  .lane .head{display:flex;align-items:center;gap:10px;padding:9px 13px;color:#fff}
+  .lane .badge{font-weight:900;font-size:15px;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:rgba(255,255,255,.2)}
+  .lane .head .nm{font-weight:800;font-size:14px;letter-spacing:.2px}
+  .lane .head .used{margin-left:auto;font-size:10.5px;opacity:.9;text-align:right}
+  .lane .body{padding:11px 13px}
+  .lane.A .head{background:linear-gradient(90deg,var(--A),#3a9c8a)} .lane.B .head{background:linear-gradient(90deg,var(--B),#c95080)}
+  .lane.C .head{background:linear-gradient(90deg,var(--C),#3f86c9)} .lane.D .head{background:linear-gradient(90deg,var(--D),#34b3a2)}
+  .lane.E .head{background:linear-gradient(90deg,var(--E),#8270d6)} .lane.F .head{background:linear-gradient(90deg,var(--F),#94a0b2)}
+  .states{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
+  .st{font-size:10.5px;border:1px dashed var(--line);border-radius:6px;padding:2px 8px;color:var(--mut);background:#f8fbfd}
+  .st.empty{color:var(--red);border-color:#f0c4c4} .st.done{color:var(--teal-d);border-color:#bfe5df}
+  .sub-rows{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+  .srow{display:flex;align-items:center;gap:8px;font-size:11.5px}
+  .srow .k{font-weight:800;font-size:10px;color:#fff;background:var(--B);border-radius:4px;padding:1px 6px;min-width:26px;text-align:center}
+  .note{font-size:11px;color:var(--mut);margin-top:9px;border-top:1px dashed var(--line);padding-top:7px}
+  .warn{color:var(--red)}
+  .legend{display:flex;flex-wrap:wrap;gap:7px 16px;font-size:11.5px;color:var(--mut);margin:4px 0 16px;align-items:center}
+  .takeaways{background:#fff;border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:11px;padding:13px 16px;margin-top:8px}
+  .takeaways h3{margin:0 0 7px;font-size:13px;color:var(--navy)}
+  .takeaways li{margin:3px 0;font-size:12px}
+  .pp{font-size:9.5px;font-weight:800;border-radius:4px;padding:0 5px;color:#fff;background:#8b46c9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>CalcMed · <span class="em">Pediatria</span> — Mapa de Fluxos <span style="font-weight:400;color:#5b6b7a;font-size:15px">(as-is)</span></h1>
+      <div class="sub">Como o app realmente funciona hoje · hub-and-spoke: 3 camadas + 6 arquétipos de fluxo · 2026-06-20</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>3</b><span>camadas</span></div>
+      <div class="stat"><b>11</b><span>blocos hub</span></div>
+      <div class="stat"><b>6</b><span>arquétipos</span></div>
+      <div class="stat"><b>~90</b><span>destinos</span></div>
+    </div>
+  </header>
+
+  <div class="legend">
+    <span><span class="dotf"></span> livre no free</span>
+    <span><span class="dotp"></span> Premium (gated)</span>
+    <span><b style="color:var(--A)">A</b> Catálogo de dose</span>
+    <span><b style="color:var(--B)">B</b> Protocolo</span>
+    <span><b style="color:var(--C)">C</b> Monte sua solução</span>
+    <span><b style="color:var(--D)">D</b> Conversor</span>
+    <span><b style="color:var(--E)">E</b> Calculadora</span>
+    <span><b style="color:var(--F)">F</b> Referência</span>
+  </div>
+
+  <!-- CAMADA 0 + 1 -->
+  <div class="layer">
+    <span class="ltag">Camada 0 · Shell persistente &nbsp;+&nbsp; Camada 1 · Entrada</span>
+    <div class="flow">
+      <div class="box"><div class="t">Sidebar global</div><div class="d">item “Pediatria”</div></div>
+      <span class="arr">›</span>
+      <div class="box"><div class="t">rota /pediatra</div><div class="d">não é toggle — é tela própria</div></div>
+      <span class="arr">›</span>
+      <div class="box" style="border-color:var(--teal);border-width:2px"><div class="t">Home pediátrica (HUB)</div><div class="d">header · busca “O que você precisa hoje?” · 11 blocos</div></div>
+      <span class="arr" style="opacity:.4">+</span>
+      <div class="box" style="background:#f8fbfd"><div class="t" style="color:var(--mut)">Persistente em toda tela</div><div class="d">back/breadcrumb · estrela favoritar · premium gate</div></div>
+    </div>
+  </div>
+
+  <!-- CAMADA 2 HUB -->
+  <div class="layer">
+    <span class="ltag">Camada 2 · Hub — Home despacha para 6 arquétipos</span>
+    <div class="hub">
+      <div class="blk"><div class="h">Sintomáticos <span class="n">9 cat · 39</span></div><div class="meta"><span class="av" style="background:var(--A)">A</span> <span class="dotp"></span> catálogo de dose</div></div>
+      <div class="blk"><div class="h">Antibióticos <span class="n">23</span></div><div class="meta"><span class="av" style="background:var(--A)">A</span> <span class="dotp"></span> catálogo de dose</div></div>
+      <div class="blk"><div class="h">Urgências <span class="n">10</span></div><div class="meta"><span class="av" style="background:var(--B)">B</span> <span class="dotp"></span><span class="dotf"></span> protocolos</div></div>
+      <div class="blk"><div class="h">Diluições e Doses <span class="n">5</span></div><div class="meta"><span class="av" style="background:var(--C)">C</span> <span class="dotp"></span> monte sua solução</div></div>
+      <div class="blk"><div class="h">Calculadoras <span class="n">3</span></div><div class="meta"><span class="av" style="background:var(--E)">E</span> <span class="dotp"></span> calculadora</div></div>
+      <div class="blk"><div class="h">Conversores <span class="n">7</span></div><div class="meta"><span class="av" style="background:var(--D)">D</span> <span class="dotf"></span> conversor</div></div>
+      <div class="blk"><div class="h">Informações <span class="n">1</span></div><div class="meta"><span class="av" style="background:var(--F)">F</span> <span class="dotf"></span> referência</div></div>
+      <div class="blk" style="border-left-color:#aab6c2"><div class="h">Passômetro · Plantão</div><div class="meta" style="color:#94a0b2">ferramentas (fora dos 6 arquétipos)</div></div>
+    </div>
+  </div>
+
+  <!-- CAMADA 3 — ARQUÉTIPOS -->
+  <div class="layer">
+    <span class="ltag">Camada 3 · Os 6 arquétipos de fluxo</span>
+
+    <!-- A -->
+    <div class="lane A">
+      <div class="head"><span class="badge">A</span><span class="nm">Catálogo de Dose</span><span class="used">Sintomáticos (39) · Antibióticos (23)<br>o fluxo mais comum do app</span></div>
+      <div class="body">
+        <div class="flow">
+          <div class="box"><div class="t">Bloco da Home</div></div><span class="arr">›</span>
+          <div class="box"><div class="t">Lista da categoria</div><div class="d">busca + linhas favoritáveis (★ nome ›)</div></div><span class="arr">›</span>
+          <div class="box" style="border-color:var(--A)"><div class="t">Calculadora de dose</div><div class="d">Peso (kg) [+ Idade] → Apresentação → Dose usual → <b>Prescrição</b> → Cuidados</div></div>
+        </div>
+        <div class="states">
+          <b style="font-size:10.5px;color:var(--mut)">Estados:</b>
+          <span class="st empty">vazio · “Informe todos os dados…”</span><span class="arr" style="font-size:13px">›</span>
+          <span class="st done">computado · volumes em verde</span>
+        </div>
+        <div class="note">
+          <b>Variantes:</b> <b>A2 tela única/acordeão</b> (Antihistamínicos 7, Antidiarreicos) — sem rota por-droga ·
+          <b>A3 item-aviso</b> (Metoclopramida — só Cuidados, sem cálculo) ·
+          <span class="warn"><b>Órfão:</b> Diclofenaco — calculadora existe mas sem entrada na lista (inacessível).</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="lane B">
+      <div class="head"><span class="badge">B</span><span class="nm">Protocolo de Urgência</span><span class="used">10 protocolos · acordeões de conduta<br>com doses calculadas por peso</span></div>
+      <div class="body">
+        <div class="sub-rows">
+          <div class="srow"><span class="k">B1</span><b>Linear</b> — Anafilaxia <span class="dotf"></span> · Hipoglicemia <span class="dotf"></span> · Bradicardia · Taquicardia · Diarreia <span class="arr">›</span> acordeões de conduta</div>
+          <div class="srow"><span class="k">B2</span><b>Ramificado</b> — Exacerbação de Asma <span class="arr">›</span> escolhe <b>Leve-moderada</b> | <b>Grave</b> <span class="arr">›</span> conduta</div>
+          <div class="srow"><span class="k">B3</span><b>Abas/calc</b> — <b>PCR</b> <span class="arr">›</span> 5 abas: Adrenalina · Amiodarona · Lidocaína · Sulfato Mg · Carga do choque (J/kg)</div>
+          <div class="srow"><span class="k">B4</span><b>Steps</b> — Intubação (1→5) · Ventilação Mecânica (parâmetros + sedação contínua)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="lane C">
+      <div class="head"><span class="badge">C</span><span class="nm">Monte sua Solução</span><span class="used">Drogas Vasoativas (8, vazão/volume)<br>Soluções Personalizadas</span></div>
+      <div class="body">
+        <div class="flow">
+          <div class="box"><div class="t">Droga / solução</div></div><span class="arr">›</span>
+          <div class="box"><div class="t">Preset “Solução padrão”</div><div class="d">ou ↓</div></div>
+          <div class="box" style="border-color:var(--C)"><div class="t">“Monte sua solução”</div><div class="d">Nº ampolas + mL soro → Concentração → Defina a dose → vazão (mL/h)</div></div>
+        </div>
+        <div class="note"><b>Soluções Personalizadas = CRUD:</b> empty (“Personalize e salve…”) <span class="arr">›</span> “Escolha:” [Oral | Vazão | Volume] <span class="arr">›</span> criar <span class="arr">›</span> salvar <span class="arr">›</span> editar/excluir.</div>
+      </div>
+    </div>
+
+    <!-- D -->
+    <div class="lane D">
+      <div class="head"><span class="badge">D</span><span class="nm">Conversor</span><span class="used">7 conversores · <span class="pill free">livre no free</span></span></div>
+      <div class="body">
+        <div class="flow">
+          <div class="box"><div class="t">De: (unidade)</div></div><span class="arr">›</span>
+          <div class="box"><div class="t">Valor</div></div><span class="arr">›</span>
+          <div class="box"><div class="t">Para: (unidade)</div></div><span class="arr">›</span>
+          <div class="box" style="border-color:var(--D)"><div class="t">Resultado</div><div class="d">recalcula a cada mudança</div></div>
+        </div>
+        <div class="note">mL/h↔mcg/kg/min · mcg/kg/min→mL/h · mL/h↔gts/min · %→mg/mL · mL/h→mcg/min · mcg/min→mL/h · Corticóides</div>
+      </div>
+    </div>
+
+    <!-- E -->
+    <div class="lane E">
+      <div class="head"><span class="badge">E</span><span class="nm">Calculadora Simples</span><span class="used">Clearance · Superfície Corporal · Taxa de Infusão*</span></div>
+      <div class="body">
+        <div class="flow">
+          <div class="box"><div class="t">Inputs</div></div><span class="arr">›</span>
+          <div class="box" style="border-color:var(--E)"><div class="t">Resultado</div></div>
+        </div>
+        <div class="note">Clearance (Schwartz/Cockroft-Gault) · Superfície Corporal (Mosteller/Costeff) · <i>*Taxa de Infusão = tela compartilhada com o app adulto.</i></div>
+      </div>
+    </div>
+
+    <!-- F -->
+    <div class="lane F">
+      <div class="head"><span class="badge">F</span><span class="nm">Referência</span><span class="used">Sinais Vitais Normais · <span class="pill free">free</span></span></div>
+      <div class="body">
+        <div class="flow"><div class="box" style="border-color:var(--F)"><div class="t">Tabela FC / FR / PA por faixa etária</div><div class="d warn">hoje é uma imagem JPG (não estruturada) — valores transcritos em raw/05b</div></div></div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:6px"><span class="pp">+</span> <b>Feature transversal — Doses Pediátricas (CRUD):</b> criar/salvar/visualizar doses personalizadas (new + view). Ferramenta pessoal, não cálculo clínico.</div>
+  </div>
+
+  <div class="takeaways">
+    <h3>Leitura para a Nova Home V2 — o que esta IA revela</h3>
+    <ul>
+      <li>O hub <b>mistura naturezas</b> num só nível: catálogos (A) · protocolos de emergência (B) · ferramentas de cálculo (C/D/E) · referência (F) · plantão. Urgências muito diferentes lado a lado.</li>
+      <li><b>Findability depende da busca</b> — 11 blocos / ~90 destinos é muito pra varrer; “O que você precisa hoje?” é o atalho real.</li>
+      <li><b>Inconsistências de molde</b> a resolver: Metoclopramida (sem calc), Diclofenaco (órfão), Sinais Vitais (imagem), Antihistamínicos/Antidiarreicos (tela única vs por-droga).</li>
+      <li><b>Reorganizar por tarefa/urgência:</b> “na emergência agora” (B/PCR) vs “prescrever” (A) vs “ferramentas” (C/D/E) — em vez de classe farmacológica + tipo de tela misturados.</li>
+      <li><b>Free é isca:</b> conversores, anafilaxia, hipoglicemia, corticóides = porta freemium → peso estratégico na Home V2.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

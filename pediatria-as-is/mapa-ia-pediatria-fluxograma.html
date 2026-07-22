@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arquitetura da Informação · Pediatria — CalcMed</title>
+<style>
+:root{--navy:#0e2a47;--navy2:#16395f;--teal:#1f9e8f;--teal-d:#147c70;--line:#dde5ee;--bg:#f4f7fb;--mut:#5b6b7a;--ink:#13212e}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+header{flex-shrink:0;background:var(--navy);color:#fff;padding:13px 20px;display:flex;align-items:center;gap:11px}
+header .logo{width:26px;height:26px;border-radius:7px;background:var(--teal);display:flex;align-items:center;justify-content:center;font-weight:700}
+header b{font-size:15px;font-weight:700}header span{font-size:12px;color:#9ec7ff;margin-left:2px}
+.toolbar{flex-shrink:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 20px;background:#fff;border-bottom:0.5px solid var(--line)}
+.bar{flex:1;min-width:140px;height:8px;border-radius:6px;background:#eef3f8;border:0.5px solid var(--line);overflow:hidden}
+.bar>div{height:100%;width:0;background:var(--teal);transition:width .25s}
+.cnt{font-size:12.5px;color:var(--mut);min-width:120px;text-align:right;font-feature-settings:'tnum'}
+button{font-size:12.5px;padding:5px 11px;border:0.5px solid var(--line);border-radius:8px;background:#fff;color:var(--navy);cursor:pointer;transition:background .15s,border-color .15s}
+button:hover{background:#eef3f8;border-color:#c5d2e0}
+.legend{flex-shrink:0;display:flex;gap:14px;flex-wrap:wrap;padding:9px 20px;background:#fff;border-bottom:0.5px solid var(--line);font-size:11.5px;color:var(--mut)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+#cy{flex:1;min-height:0}
+.hint{flex-shrink:0;padding:8px 20px;font-size:11.5px;color:#8090a0;background:#fff;border-top:0.5px solid var(--line)}
+.hint b{color:var(--teal-d)}
+</style></head><body>
+<header><span class="logo">+</span><b>Arquitetura da Informação</b><span>· Pediatria (as-is do app atual)</span></header>
+<div class="toolbar">
+  <div class="bar"><div id="bar"></div></div>
+  <span class="cnt" id="cnt">0 / 0 checados</span>
+  <button id="dir">↔ / ↕ direção</button>
+  <button id="fit">Ajustar</button>
+  <button id="clr">Limpar checks</button>
+</div>
+<div class="legend">
+  <span><i style="background:#16395f"></i>Estrutura</span>
+  <span><i style="background:#1d9e75"></i>Livre no free</span>
+  <span><i style="background:#6f8398"></i>Premium</span>
+  <span><i style="background:#d85a30"></i>Urgência</span>
+  <span><i style="background:#378add"></i>Ferramenta</span>
+  <span><i style="background:#ba7517"></i>Flag / dívida</span>
+</div>
+<div id="cy"></div>
+<div class="hint"><b>Clique num nó para marcar/desmarcar</b> (acompanhamento) · scroll = zoom · arraste pra mover · ↔/↕ troca direção · o progresso fica salvo neste navegador · 101 rotas resumidas em ~45 nós</div>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.2/dist/cytoscape.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cytoscape-dagre@2.5.0/cytoscape-dagre.min.js"></script>
+<script>
+(function(){
+  if(!window.cytoscape){document.getElementById('cy').innerHTML='<p style="padding:24px;color:#5b6b7a">Não foi possível carregar a biblioteca do mapa (verifique a conexão).</p>';return;}
+  try{ if(window.cytoscapeDagre) cytoscape.use(window.cytoscapeDagre); }catch(e){}
+  var C={est:'#16395f',root:'#0e2a47',free:'#1d9e75',prem:'#6f8398',urg:'#d85a30',tool:'#378add',flag:'#ba7517'};
+  var N=[
+    ['ped','Pediatria  /pediatra','root'],['banners','Banners','est'],['passo','Passômetro','est'],['busca','Busca','est'],
+    ['sint','Sintomáticos','est'],['atb','Antibióticos','est'],['urg','Urgências','est'],['dil','Diluições & Doses','est'],
+    ['calc','Calculadoras','est'],['conv','Conversores','est'],['info','Sinais Vitais','est'],['plant','Plantão','est'],
+    ['s_antiterm','Antitérmicos','prem'],['s_aine','Anti-inflamatórios','prem'],['s_antiemet','Antieméticos','prem'],
+    ['s_antihist','Antihistamínicos','prem'],['s_espasm','Antiespasmódico','prem'],['s_antidiar','Antidiarreicos','prem'],
+    ['s_bronco','Broncodilatadores','prem'],['s_lax','Laxativos','prem'],['s_cortic','Corticóides','free'],
+    ['atb23','23 drogas','prem'],['atb_orf','ATB adultos (órfãos)','flag'],
+    ['u_diarreia','Diarreia','urg'],['u_asma','Asma','urg'],['u_convul','Convulsão','urg'],['u_anafi','Anafilaxia','free'],
+    ['u_hipo','Hipoglicemia','free'],['u_bradi','Bradicardia','urg'],['u_taqui','Taquicardia','urg'],['u_pcr','PCR','urg'],
+    ['u_intub','Intubação','urg'],['u_vm','Vent. Mecânica','urg'],
+    ['d_hidr','Hidratação','prem'],['d_vaso','Vasoativas','prem'],['d_sol','Soluções Personalizadas','prem'],['d_keto','Ketofol / Ketodex','prem'],
+    ['c_clear','Clearance Creatinina','tool'],['c_taxa','Taxa de Infusão','tool'],['c_sup','Superfície Corporal','tool'],['conv7','7 conversores','free'],
+    ['p_descanso','Dividir Descanso','free'],['p_eletro','CalcMed Eletro','est'],['p_anot','Minhas Anotações','est'],
+    ['f_diclo','Diclofenaco (órfão)','flag'],['f_meto','Metoclopramida (sem calc)','flag'],['f_img','Sinais Vitais = imagem','flag']
+  ];
+  var E=[['ped','banners'],['ped','passo'],['ped','busca'],['ped','sint'],['ped','atb'],['ped','urg'],['ped','dil'],['ped','calc'],['ped','conv'],['ped','info'],['ped','plant'],
+    ['sint','s_antiterm'],['sint','s_aine'],['sint','s_antiemet'],['sint','s_antihist'],['sint','s_espasm'],['sint','s_antidiar'],['sint','s_bronco'],['sint','s_lax'],['sint','s_cortic'],
+    ['atb','atb23'],['atb','atb_orf'],['urg','u_diarreia'],['urg','u_asma'],['urg','u_convul'],['urg','u_anafi'],['urg','u_hipo'],['urg','u_bradi'],['urg','u_taqui'],['urg','u_pcr'],['urg','u_intub'],['urg','u_vm'],
+    ['dil','d_hidr'],['dil','d_vaso'],['dil','d_sol'],['dil','d_keto'],['calc','c_clear'],['calc','c_taxa'],['calc','c_sup'],['conv','conv7'],
+    ['plant','p_descanso'],['plant','p_eletro'],['plant','p_anot'],['s_aine','f_diclo'],['s_antiemet','f_meto'],['info','f_img']];
+  var STORAGE_KEY='calcmed_ia_ped_chk', ROOT_ID='ped';
+  var els=N.map(function(n){return {data:{id:n[0],base:n[1],label:n[1],c:C[n[2]]}};})
+    .concat(E.map(function(e){return {data:{id:e[0]+'_'+e[1],source:e[0],target:e[1]}};}));
+  var dir='LR';
+  function lay(){return {name:(window.cytoscapeDagre?'dagre':'breadthfirst'),rankDir:dir,directed:true,nodeSep:13,rankSep:64,edgeSep:6,animate:true,animationDuration:450,fit:true,padding:20};}
+  var cy=cytoscape({container:document.getElementById('cy'),elements:els,
+    style:[
+      {selector:'node',style:{'background-color':'data(c)','label':'data(label)','color':'#fff','font-size':'10px','font-weight':600,'text-valign':'center','text-halign':'center','text-wrap':'wrap','text-max-width':'108px','width':'label','height':'label','padding':'9px','shape':'round-rectangle','border-width':0}},
+      {selector:'node[id = "ped"]',style:{'font-size':'13px','padding':'14px'}},
+      {selector:'node[c = "#16395f"]',style:{'font-size':'11px','padding':'11px'}},
+      {selector:'node.chk',style:{'border-width':4,'border-color':'#1d9e75','opacity':0.5}},
+      {selector:'edge',style:{'width':1.5,'line-color':'#aebfd0','target-arrow-color':'#aebfd0','target-arrow-shape':'triangle','curve-style':'taxi','taxi-direction':'rightward','taxi-turn':22,'arrow-scale':0.9}}
+    ],layout:lay(),wheelSensitivity:0.25,minZoom:0.2,maxZoom:2.6});
+  var saved=[];try{saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){}
+  var total=cy.nodes().length-1;
+  function setChk(n,on){if(on){n.addClass('chk');n.data('label','✓ '+n.data('base'));}else{n.removeClass('chk');n.data('label',n.data('base'));}}
+  function save(){var a=cy.nodes('.chk').map(function(x){return x.id();});try{localStorage.setItem(STORAGE_KEY,JSON.stringify(a));}catch(e){}}
+  function refresh(){var c=cy.nodes('.chk').length;document.getElementById('cnt').textContent=c+' / '+total+' checados';document.getElementById('bar').style.width=(total?Math.round(c/total*100):0)+'%';}
+  saved.forEach(function(id){var n=cy.getElementById(id);if(n&&n.length&&id!==ROOT_ID)setChk(n,true);});refresh();
+  cy.on('tap','node',function(ev){var n=ev.target;if(n.id()===ROOT_ID)return;setChk(n,!n.hasClass('chk'));save();refresh();});
+  document.getElementById('fit').onclick=function(){cy.animate({fit:{padding:20},duration:360});};
+  document.getElementById('dir').onclick=function(){dir=(dir==='LR'?'TB':'LR');cy.style().selector('edge').style('taxi-direction',dir==='LR'?'rightward':'downward').update();cy.layout(lay()).run();};
+  document.getElementById('clr').onclick=function(){if(!confirm('Limpar todos os checks deste mapa?'))return;cy.nodes('.chk').forEach(function(n){setChk(n,false);});save();refresh();};
+})();
+</script></body></html>

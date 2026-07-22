@@ -1,0 +1,101 @@
+{
+  "id": "ibuprofeno-ped",
+  "tipo": "droga-dose",
+  "nome": "Ibuprofeno",
+  "classe": "AINE",
+  "publico": "pediatrico",
+  "via": "Oral",
+  "statusEditorial": "rascunho",
+  "revisaoMedicaStatus": "pendente",
+  "observacoes": [
+    { "id": "o1", "nivel": "warning", "texto": "Contraindicado < 6 meses." }
+  ],
+  "referencias": "Bulario / protocolo institucional",
+  "contraindicacoes": {
+    "texto": "Contraindicado em < 6 meses (Meses) / < 1 ano (Anos).",
+    "gate": true
+  },
+  "tagsRisco": ["aine", "pediatria"],
+  "ferramentasSimilares": ["paracetamol-ped", "dipirona-ped"],
+  "slots": {
+    "peso": true,
+    "idade": true,
+    "apresentacao": true,
+    "doseMaxima": true,
+    "definirDose": false,
+    "dialise": false,
+    "regime": false,
+    "clearance": false,
+    "cockcroft": false,
+    "observacoes": true,
+    "referencias": true,
+    "copiarCompartilhar": true,
+    "ferramentasSimilares": true
+  },
+  "ordemBlocos": ["idade", "peso", "apresentacao", "posologias", "observacoes", "referencias"],
+  "schemaVersion": 1,
+  "corpo": {
+    "tipo": "hibrido",
+    "apresentacoes": [
+      { "id": "gotas50", "label": "Gotas 50 mg/mL", "concentracao_mg_ml": 50, "forma": "gotas" },
+      { "id": "gotas100", "label": "Gotas 100 mg/mL", "concentracao_mg_ml": 100, "forma": "gotas" },
+      { "id": "gotas200", "label": "Gotas 200 mg/mL", "concentracao_mg_ml": 200, "forma": "gotas" }
+    ],
+    "posologias": [
+      {
+        "id": "p1",
+        "papel": "direta",
+        "cenario": "",
+        "droga": "Ibuprofeno",
+        "dose": "5 a 10",
+        "unidade": "mg/kg",
+        "diluente": "",
+        "viaInline": "Oral",
+        "tempo": "",
+        "intervalo": "6/6h a 8/8h",
+        "esquema": "",
+        "alternativa": false
+      }
+    ],
+    "regraCalculo": {
+      "tipo": "hibrido",
+      "gate_idade": {
+        "regra": {
+          "op": "OU",
+          "termos": [
+            { "unidade": "Meses", "campo": "idade", "cmp": ">=", "valor": 6 },
+            { "unidade": "Anos", "campo": "idade", "cmp": ">=", "valor": 1 }
+          ]
+        },
+        "se_falso": { "tipo": "contraindicado", "texto": "Contraindicado Ibuprofeno" }
+      },
+      "ramos": [
+        {
+          "por": "apresentacao",
+          "quando": "gotas50",
+          "saidas": [
+            { "id": "min", "porPeso": { "fator": 1, "casas": 0, "teto": { "valor": 40, "tipo": "clamp" } } },
+            { "id": "max", "expr": "peso>=40 ? 20 : peso*2", "casas": 0 }
+          ]
+        },
+        {
+          "por": "apresentacao",
+          "quando": "gotas100",
+          "saidas": [
+            { "id": "unica", "porPeso": { "fator": 1, "casas": 0, "teto": { "valor": 20, "tipo": "clamp" } } }
+          ]
+        },
+        {
+          "por": "apresentacao",
+          "quando": "gotas200",
+          "saidas": [
+            { "id": "min", "expr": "(peso/4 >= 10) ? 10 : floor(peso/4)", "casas": 0 },
+            { "id": "max", "expr": "(peso/2 >= 10) ? 10 : peso/2", "casas": 0 }
+          ]
+        }
+      ],
+      "ramos_neonatais": []
+    },
+    "doseMaxima": { "valor": null, "unidade": "gotas", "tipo": "clamp" }
+  }
+}

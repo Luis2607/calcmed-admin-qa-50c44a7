@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcMed — Do app atual ao admin coeso (canvas)</title>
+<style>
+  :root{
+    --navy:#0e2a47; --navy2:#16395f; --teal:#1f9e8f; --teal-d:#147c70;
+    --red:#d23b3b; --amber:#e0a008; --ink:#13212e; --mut:#5b6b7a;
+    --line:#dde5ee; --bg:#eef3f8; --card:#fff;
+    --gui:#2d6fb0; --gus:#b03b66;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:30px 22px 70px}
+  .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:18px;padding:30px 34px;box-shadow:0 6px 24px rgba(14,42,71,.18)}
+  .hero .kick{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#9ec7ff;font-weight:700}
+  .hero h1{margin:8px 0 6px;font-size:30px;letter-spacing:-.5px}
+  .hero h1 .em{color:#5fd0c0}
+  .hero p{margin:0;color:#cfe0f0;font-size:14.5px;max-width:760px}
+  .hero .meta{margin-top:14px;font-size:12px;color:#9ec7ff}
+  h2.sec{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy);margin:34px 0 14px;display:flex;align-items:center;gap:10px}
+  h2.sec::after{content:"";flex:1;height:2px;background:var(--line)}
+  /* timeline */
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .step{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px;position:relative;margin-right:22px;box-shadow:0 1px 3px rgba(16,40,60,.05)}
+  .step:last-child{margin-right:0}
+  .step::after{content:"›";position:absolute;right:-17px;top:50%;transform:translateY(-50%);color:var(--mut);font-weight:800;font-size:20px}
+  .step:last-child::after{display:none}
+  .step .n{font-size:10.5px;font-weight:800;color:var(--teal-d)}
+  .step .t{font-weight:700;font-size:13px;color:var(--navy);margin:3px 0 2px}
+  .step .d{font-size:11.5px;color:var(--mut)}
+  .step.done .n{color:var(--teal)}
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 16px;border-top:4px solid var(--teal)}
+  .stat b{display:block;font-size:27px;color:var(--navy);line-height:1.05;letter-spacing:-.5px}
+  .stat span{font-size:12px;color:var(--mut)}
+  .stat.alt{border-top-color:var(--navy2)}
+  /* engine diagram */
+  .engine{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .pipe{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:center}
+  .node{background:#f4f8fc;border:1.5px solid var(--line);border-radius:10px;padding:9px 14px;text-align:center;min-width:120px}
+  .node .nt{font-weight:800;font-size:13px;color:var(--navy)}
+  .node .ns{font-size:11px;color:var(--mut)}
+  .node.hot{border-color:var(--teal);background:#eafaf7}
+  .arr{color:var(--teal);font-weight:800;font-size:18px}
+  .molds{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;justify-content:center}
+  .mold{font-size:11px;background:#eef3f8;border:1px solid var(--line);border-radius:7px;padding:3px 9px;color:var(--navy);font-weight:600}
+  .note{font-size:12px;color:var(--mut);text-align:center;margin-top:11px}
+  .note b{color:var(--teal-d)}
+  /* handoff list */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+  .panel h3{margin:0 0 10px;font-size:15px;color:var(--navy)}
+  .panel li{font-size:13px;margin:6px 0;list-style:none;padding-left:22px;position:relative;color:var(--ink)}
+  .panel li::before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:800}
+  .panel.ready{border-top:4px solid var(--teal)}
+  /* decisions */
+  .decs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .dec{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px;border-left:5px solid var(--amber)}
+  .dec .who{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:1px 8px;border-radius:20px;color:#fff}
+  .dec .who.gui{background:var(--gui)} .dec .who.gus{background:var(--gus)}
+  .dec .q{font-weight:700;font-size:13.5px;color:var(--navy);margin:7px 0 3px}
+  .dec .o{font-size:12px;color:var(--mut)}
+  /* phases */
+  .phases{display:flex;gap:8px;flex-wrap:wrap}
+  .ph{flex:1;min-width:140px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px 13px;border-top:3px solid var(--navy2)}
+  .ph .pn{font-size:10px;font-weight:800;color:var(--teal-d);letter-spacing:.5px}
+  .ph .pt{font-weight:700;font-size:13px;color:var(--navy);margin:3px 0}
+  .ph .pd{font-size:11.5px;color:var(--mut)}
+  .ph.f0{border-top-color:var(--teal)}
+  footer{margin-top:34px;border-top:1px solid var(--line);padding-top:14px;font-size:12px;color:var(--mut)}
+  .pill{display:inline-block;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;background:#eafaf7;color:var(--teal-d);border:1px solid #bfe5df}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kick">CalcMed · Auditoria As-Is → Admin Coeso</div>
+    <h1>Do <span class="em">app atual</span> ao <span class="em">admin que funciona de verdade</span></h1>
+    <p>Mapeamos 100% do app de produção (adulto + pediátrico) direto da fonte, clusterizamos a lógica de dose, e fechamos um handoff de backend pronto pro Gui — com QA em loop até zerar os erros. Este canvas é o resumo pra decidir os próximos passos.</p>
+    <div class="meta">2026-06-21 · pacote completo em <b>CalcMed Urgencia/pediatria-as-is/</b> · entry-point: 00_HUB.md</div>
+  </div>
+
+  <h2 class="sec">A jornada</h2>
+  <div class="flow">
+    <div class="step done"><div class="n">PONTO DE PARTIDA</div><div class="t">Escopo perdido</div><div class="d">Telas de pediatria nunca mapeadas / fora do board.</div></div>
+    <div class="step done"><div class="n">FONTE</div><div class="t">Bundle baixado</div><div class="d">Todo o conteúdo está num arquivo público do app.</div></div>
+    <div class="step done"><div class="n">EXTRAÇÃO</div><div class="t">Agentes em paralelo</div><div class="d">Leitura + clusterização exaustiva, verificada.</div></div>
+    <div class="step done"><div class="n">MODELOS</div><div class="t">Dose + admin</div><div class="d">64 drogas → 7 arquétipos; modelo de cadastro.</div></div>
+    <div class="step done"><div class="n">HANDOFF</div><div class="t">Spec pro Gui</div><div class="d">JSON schemas + DSL + migração.</div></div>
+    <div class="step done"><div class="n">QA LOOP</div><div class="t">Limpo ✓</div><div class="d">Erros zerados, verificado por execução.</div></div>
+  </div>
+
+  <h2 class="sec">O app atual, em números</h2>
+  <div class="stats">
+    <div class="stat"><b>101</b><span>rotas de pediatria — 100% documentadas</span></div>
+    <div class="stat"><b>~98</b><span>features do app adulto mapeadas</span></div>
+    <div class="stat"><b>64→7</b><span>drogas pediátricas → arquétipos de dose</span></div>
+    <div class="stat"><b>38</b><span>antibióticos adultos (hospitalares)</span></div>
+    <div class="stat alt"><b>6.260</b><span>strings de copy catalogadas</span></div>
+    <div class="stat alt"><b>2</b><span>apps num só bundle (adulto + pediátrico)</span></div>
+  </div>
+
+  <h2 class="sec">A virada: como o admin fica coeso</h2>
+  <div class="engine">
+    <div class="pipe">
+      <div class="node"><div class="nt">Operador</div><div class="ns">preenche um form</div></div>
+      <span class="arr">›</span>
+      <div class="node hot"><div class="nt">Molde</div><div class="ns">só os campos certos</div></div>
+      <span class="arr">›</span>
+      <div class="node hot"><div class="nt">JSON</div><div class="ns">o contrato (dado)</div></div>
+      <span class="arr">›</span>
+      <div class="node hot"><div class="nt">Engine</div><div class="ns">fórmula = dado, não código</div></div>
+      <span class="arr">›</span>
+      <div class="node"><div class="nt">Tela / cálculo</div><div class="ns">no app</div></div>
+    </div>
+    <div class="molds">
+      <span class="mold">droga-dose (8 sub-tipos)</span><span class="mold">calculadora</span><span class="mold">escore</span><span class="mold">protocolo</span><span class="mold">conversor</span><span class="mold">tabela-referência</span><span class="mold">conduta</span>
+    </div>
+    <div class="note"><b>9 tipos canônicos</b> cobrem 100% do conteúdo. O operador não desenha tela — escolhe o molde e preenche. <b>Um engine</b> executa o JSON. Documentado + funcional.</div>
+  </div>
+
+  <h2 class="sec">Pronto pro Gui (backend-ready)</h2>
+  <div class="grid2">
+    <div class="panel ready">
+      <h3>O que já está fechado</h3>
+      <li>JSON Schemas formais — <b>compilam em ajv 2020-12</b></li>
+      <li>Instâncias reais validam (Ibuprofeno, IMC)</li>
+      <li>Gramática do DSL <code>regraCalculo</code> (whitelist, sem código solto)</li>
+      <li>Avaliador reproduz <b>14/14 doses verbatim</b> + golden-set de testes</li>
+      <li>Migração do schema atual (v3) → unificado</li>
+    </div>
+    <div class="panel">
+      <h3>O fato que muda o plano</h3>
+      <li style="--c:var(--red)">O app de hoje é <b>hardcode</b> (não lê JSON) → o pipeline admin→app é <b>construção nova</b>.</li>
+      <li>Catálogos de droga (sintomáticos + antibióticos) viram <b>admin data-driven</b> — não dezenas de telas Figma.</li>
+      <li>O premium é definido no app</b> (definido no app).</li>
+      <li>29 flags de conteúdo as-is sinalizadas pra revisão clínica.</li>
+    </div>
+  </div>
+
+  <h2 class="sec">Decisões abertas — bater o martelo</h2>
+  <div class="decs">
+    <div class="dec"><span class="who gui">Gui</span><div class="q">Runtime do engine</div><div class="o">Dart embarcado (offline, recomendado) vs backend.</div></div>
+    <div class="dec"><span class="who gus">Gustavo</span><div class="q">biggerThen: &gt; ou &gt;=?</div><div class="o">Comparador não isolável no código; recomendação &gt;=.</div></div>
+    <div class="dec"><span class="who gus">Gustavo</span><div class="q">Clamp vs texto na dose máx</div><div class="o">Default = comportamento atual; mudar = reaprovação clínica.</div></div>
+    <div class="dec"><span class="who gui">Gui</span><div class="q">Escopo R1</div><div class="o">Pediatria/dose-calculada como fase 2; adulto primeiro.</div></div>
+  </div>
+
+  <h2 class="sec">Faseamento da entrega</h2>
+  <div class="phases">
+    <div class="ph f0"><div class="pn">FASE 0 · destrava tudo</div><div class="pt">Fundação</div><div class="pd">Molde canônico no novo DS + schema do admin.</div></div>
+    <div class="ph"><div class="pn">FASE 1</div><div class="pt">Emergências</div><div class="pd">Anafilaxia (free!) + urgências; decisão PCR.</div></div>
+    <div class="ph"><div class="pn">FASE 2</div><div class="pt">Catálogos data-driven</div><div class="pd">Cadastrar drogas via admin + IA, QA + Gustavo.</div></div>
+    <div class="ph"><div class="pn">FASE 3</div><div class="pt">Bespoke</div><div class="pd">Soluções personalizadas, superfície corporal.</div></div>
+    <div class="ph"><div class="pn">FASE 4</div><div class="pt">Correções</div><div class="pd">Telas problemáticas, web, imagens.</div></div>
+  </div>
+
+  <footer>
+    Resumo visual. Detalhe completo no cérebro: <b>handoff</b> <code>admin-spec/00-HANDOFF-GUI.md</code> · <b>schemas</b> <code>admin-spec/schemas/</code> · <b>modelo de dose</b> <code>MODELO-DOSE-PEDIATRICA.md</code> · <b>antibióticos adultos</b> <code>MODELO-ANTIBIOTICOS-ADULTOS.md</code> · <b>gap & faseamento</b> <code>gap-figma-vs-asis.md</code>. <span class="pill">QA loop: limpo</span>
+  </footer>
+
+</div>
+</body>
+</html>
