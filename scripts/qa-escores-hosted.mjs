@@ -26,16 +26,33 @@ function qaUrl({ modo = 'adulto', id } = {}) {
 
 async function gotoAndWait(url, expectedText) {
   let lastError;
-  for (let attempt = 0; attempt < 6; attempt += 1) {
+  const attempts = [];
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
-      await page.getByText(expectedText, { exact: false }).first().waitFor({ timeout: 15_000 });
+      const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.getByText(expectedText, { exact: false }).first().waitFor({ timeout: 20_000 });
       return;
     } catch (error) {
       lastError = error;
-      await page.waitForTimeout(5_000);
+      const body = await page.locator('body').innerText().catch(() => '');
+      attempts.push({
+        attempt,
+        url: page.url(),
+        title: await page.title().catch(() => ''),
+        body: body.slice(0, 2_000),
+        error: String(error),
+      });
+      if (attempt < 3) await page.waitForTimeout(5_000);
     }
   }
+  await page.screenshot({ path: resolve(outDir, 'failure.png'), fullPage: true }).catch(() => {});
+  await writeFile(resolve(outDir, 'failure.json'), JSON.stringify({
+    baseUrl,
+    expectedText,
+    attempts,
+    consoleErrors,
+    pageErrors,
+  }, null, 2) + '\n', 'utf8');
   throw lastError;
 }
 
