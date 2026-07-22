@@ -1,0 +1,62 @@
+name: Escores browser proof
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/qa-escores-hosted.mjs'
+      - '.github/workflows/escores-browser-proof.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/qa-escores-hosted.mjs'
+      - '.github/workflows/escores-browser-proof.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: escores-browser-proof
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  qa-hospedada:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ESCORES_QA_BASE_URL: 'https://luis2607.github.io/calcmed-admin-qa-50c44a7/escores-qa.html'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar Playwright
+        run: npm install --no-save --package-lock=false playwright@1.61.1
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Executar QA visivel
+        run: node scripts/qa-escores-hosted.mjs
+
+      - name: Anexar evidencia
+        uses: actions/upload-artifact@v4
+        with:
+          name: ticket-16-8g-hosted
+          path: evidence/ticket-16.8g/hosted
+          if-no-files-found: error
+
+      - name: Persistir DOM e screenshots
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evidence/ticket-16.8g/hosted
+          git diff --cached --quiet && exit 0
+          git commit -m "test(escores): registrar QA hospedada 16.8g"
+          git push
