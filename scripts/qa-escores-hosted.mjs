@@ -27,7 +27,7 @@ function qaUrl({ modo = 'adulto', id } = {}) {
 async function gotoAndWait(url, expectedText) {
   let lastError;
   const attempts = [];
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 1; attempt += 1) {
     try {
       const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
       await page.getByText(expectedText, { exact: false }).first().waitFor({ timeout: 20_000 });
@@ -42,7 +42,7 @@ async function gotoAndWait(url, expectedText) {
         body: body.slice(0, 2_000),
         error: String(error),
       });
-      if (attempt < 3) await page.waitForTimeout(5_000);
+      if (attempt < 1) await page.waitForTimeout(5_000);
     }
   }
   await page.screenshot({ path: resolve(outDir, 'failure.png'), fullPage: true }).catch(() => {});
@@ -53,6 +53,7 @@ async function gotoAndWait(url, expectedText) {
     consoleErrors,
     pageErrors,
   }, null, 2) + '\n', 'utf8');
+  console.error('[qa:escores:hosted] DIAGNOSTICO ' + JSON.stringify({ baseUrl, expectedText, attempts, consoleErrors, pageErrors }));
   throw lastError;
 }
 
