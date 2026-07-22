@@ -78,7 +78,7 @@ await page.getByText('≥2 pontos', { exact: true }).waitFor();
 evidence.push({ scenario: 'qsofa', text: await capture('qsofa-result-2') });
 
 await gotoAndWait(
-  qaUrl({ modo: 'adulto', id: 'qa-16-8g-meld-publicado' }),
+  qaUrl({ modo: 'adulto', id: 'c3a2e3c4-5d6e-4f70-8182-333333330001' }),
   'Bilirrubina total',
 );
 await page.getByLabel('Bilirrubina total').fill('2');
@@ -88,7 +88,7 @@ await page.getByText('MELD 10–19: risco moderado', { exact: true }).waitFor();
 evidence.push({ scenario: 'meld', text: await capture('meld-result-15') });
 
 await gotoAndWait(
-  qaUrl({ modo: 'pediatrico', id: 'qa-16-8g-rodwell-publicado' }),
+  qaUrl({ modo: 'pediatrico', id: 'b2f1d2b3-4c5d-4e6f-8071-222222220001' }),
   'Contagem total de leucócitos anormal',
 );
 await page.getByRole('group', { name: /Contagem total de leucócitos anormal/ })
