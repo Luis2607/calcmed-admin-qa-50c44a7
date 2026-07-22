@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      ESCORES_QA_BASE_URL: 'https://luis2607.github.io/calcmed-admin-qa-50c44a7/escores-qa.html'
+      ESCORES_QA_BASE_URL: 'https://calcmed-admin-git-codex-e-4cea7c-luisfelipebsl26-3677s-projects.vercel.app/escores-qa.html'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,6 +45,7 @@ jobs:
         run: node scripts/qa-escores-hosted.mjs
 
       - name: Anexar evidencia
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ticket-16-8g-hosted
@@ -52,7 +53,7 @@ jobs:
           if-no-files-found: error
 
       - name: Persistir DOM e screenshots
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
