@@ -35,6 +35,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Diagnosticar endpoint
+        run: node -e "fetch(process.env.ESCORES_QA_BASE_URL).then(async r => console.log(JSON.stringify({status:r.status,url:r.url,type:r.headers.get('content-type'),body:(await r.text()).slice(0,1000)})))"
+
       - name: Instalar Playwright
         run: npm install --no-save --package-lock=false playwright@1.61.1
 
