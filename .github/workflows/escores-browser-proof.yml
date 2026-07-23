@@ -1,31 +1,26 @@
 name: Escores browser proof
 
 on:
-  pull_request:
-    branches: [main]
-    paths:
-      - 'scripts/qa-escores-hosted.mjs'
-      - '.github/workflows/escores-browser-proof.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'scripts/qa-escores-hosted.mjs'
-      - '.github/workflows/escores-browser-proof.yml'
   workflow_dispatch:
+    inputs:
+      base_url:
+        description: URL publica ou temporaria da rota /escores-qa.html
+        required: true
+        type: string
 
 concurrency:
   group: escores-browser-proof
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   qa-hospedada:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      ESCORES_QA_BASE_URL: 'https://calcmed-admin-git-codex-e-4cea7c-luisfelipebsl26-3677s-projects.vercel.app/escores-qa.html?_vercel_share=2k4K8WtXdtSYEJCEftXWYCTuJN0vLRuW'
+      ESCORES_QA_BASE_URL: ${{ inputs.base_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,7 +31,7 @@ jobs:
           node-version: 22
 
       - name: Diagnosticar endpoint
-        run: node -e "fetch(process.env.ESCORES_QA_BASE_URL).then(async r => console.log(JSON.stringify({status:r.status,url:r.url,type:r.headers.get('content-type'),body:(await r.text()).slice(0,1000)})))"
+        run: node -e "fetch(process.env.ESCORES_QA_BASE_URL).then(async r => console.log(JSON.stringify({status:r.status,url:r.url,type:r.headers.get('content-type')})))"
 
       - name: Instalar Playwright
         run: npm install --no-save --package-lock=false playwright@1.61.1
@@ -54,13 +49,3 @@ jobs:
           name: ticket-16-8g-hosted
           path: evidence/ticket-16.8g/hosted
           if-no-files-found: error
-
-      - name: Persistir DOM e screenshots
-        if: github.event_name == 'push' && success()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add evidence/ticket-16.8g/hosted
-          git diff --cached --quiet && exit 0
-          git commit -m "test(escores): registrar QA hospedada 16.8g"
-          git push
